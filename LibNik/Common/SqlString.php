@@ -3,9 +3,9 @@ namespace LibNik\Common;
 
 class SqlString
 {
-	private $string;
+    private $string;
     
-	public function __construct($string)
+    public function __construct($string)
     {
         $this->string = $string;
     }
