@@ -3,7 +3,7 @@ namespace LibNik\Core;
 
 class Env
 {
-    public static function get()
+    public static function get() 
     {
         static $singleton;
         return $singleton ?: $singleton = new static();
@@ -26,57 +26,57 @@ class Env
     
     /* PUBLIC ACCESS FUNCTIONS */
 
-    public function siteMode()
-	{
+    public function siteMode() 
+    {
         return $this->site_mode;
     }
 
-    public function developmentMode()
-	{
+    public function developmentMode() 
+    {
         return $this->site_mode != 'live';
     }
 
-    public function liveMode()
-	{
+    public function liveMode() 
+    {
         return $this->site_mode == 'live';
     }
     
-    public function secure()
-	{
+    public function secure() 
+    {
         return $this->secure;
     }
 
-    public function hostOS()
-	{
+    public function hostOS() 
+    {
         return $this->host_os;
     }
 
-    public function hostName()
-	{
+    public function hostName() 
+    {
         return $this->host_name;
     }
 
-    public function httpHost()
-	{
+    public function httpHost() 
+    {
         return $this->http_host;
     }
     
-    public function isIE6()
-	{
+    public function isIE6() 
+    {
         return $this->ie6;
     }
 
-    public function getSiteRevision()
-	{
+    public function getSiteRevision() 
+    {
         return $this->revision;
     }
 
-    public function getIP()
-	{
+    public function getIP() 
+    {
         return $this->ip;
     }
 
-    public function mobileBrowser($ignore_cookie = false)
+    public function mobileBrowser($ignore_cookie = false) 
     {
         // Special case - User has opted to view the full non-mobile site, but we still want to know if they are actually on a mobile.
         // For example, to display a "Show mobile site" link.
@@ -87,10 +87,8 @@ class Env
     }
         
     /* PUBLIC CONTROL FUNCTIONS */
-    protected function __construct()
-	{
-        global $machine_name;
-        
+    protected function __construct() 
+    {
         $this->site_mode = $_SERVER['SITE_MODE'] == 'live' ? 'live' : 'development';        
         $this->secure = ($_SERVER['HTTPS'] == 'on');
         
@@ -141,13 +139,13 @@ class Env
     }
 
     // Display an HTML comment containing general site info
-    public static function displaySiteInfoComment()
-	{
+    public static function displaySiteInfoComment() 
+    {
         echo Env::get()->siteInfoComment();
     }
     
-    public function siteInfoComment()
-	{
+    public function siteInfoComment() 
+    {
         global $config;
         
         preg_match('#[-_/]([^-_/]+?)/?$#', $config['lib_include'], $matches);
@@ -168,7 +166,7 @@ class Env
         return $str;
     }
     
-    private function findIPAddress()
+    private function findIPAddress() 
     {
         if (getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown")) {
             $ip = getenv("HTTP_CLIENT_IP");
