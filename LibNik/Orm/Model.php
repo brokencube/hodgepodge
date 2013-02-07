@@ -12,16 +12,13 @@ use LibNik\Exception;
  * Features:
  * * Auto generation of object properties - TableName::get($id)->column_name syntax
  * * Foreign key support
- * *   - Can create other objects of appropriate types based on foreign keys specified.
- * *   - Supports 1 to 1 identity foreign keys between 'id' columns.
+ * *   - Can create other Model objects of appropriate types based on foreign keys specified.
  * * Many to Many support - Can understand pivot tables for many to many relationships
  *
  * Database Design Caveats:
  * * Pivot tables must only contain 2 columns (the two foreign keys).
  * * All tables (except pivots) must have an "id int primary key auto_increment" column
  * * Foreign key columns must end in '_id'
- *
- * See: http://wiki.picture-pal.co.uk/index.php/Model for examples and more details
  */
 
 class Model implements JsonSerializable
