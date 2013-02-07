@@ -137,34 +137,6 @@ class Env
         
         $this->ip = $this->findIPAddress();
     }
-
-    // Display an HTML comment containing general site info
-    public static function displaySiteInfoComment() 
-    {
-        echo Env::get()->siteInfoComment();
-    }
-    
-    public function siteInfoComment() 
-    {
-        global $config;
-        
-        preg_match('#[-_/]([^-_/]+?)/?$#', $config['lib_include'], $matches);
-        $lib = $matches[1];
-        
-        preg_match('#^(.+?)(\.picture-pal\.co\.uk)?$#', $config['db']['default']['server'], $matches);
-        $db_name = $matches[1];
-        
-        preg_match('#^(.+?)(\.picture-pal\.co\.uk)?$#', $config['db_host'], $matches);
-        $old_db_name = $matches[1];
-        
-        $str =  "<!--\n";
-        $str .= "\tsite mode: " . $this->site_mode . "\n";
-        $str .= "\trevision: " . $this->revision . "\n";
-        $str .= "\tlib version: " . $lib . "\n";
-        $str .= "\tpphq database host: " . $db_name . " (" . $old_db_name . ") \n";
-        $str .= "-->\n";
-        return $str;
-    }
     
     private function findIPAddress() 
     {
@@ -178,7 +150,7 @@ class Env
             $ip = $_SERVER['REMOTE_ADDR'];
         } else {
             $ip = "unknown";
-		}
+	}
 		
         return($ip);        
     }
