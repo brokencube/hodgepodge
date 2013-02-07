@@ -3,22 +3,6 @@ namespace LibNik\Exception;
 
 class Model extends Generic
 {
-    protected $data = array();
-    protected $errorcodes = array(
-        'NO_SCHEMA',
-        'CONSTRUCT:ID_MISSING',
-        'MODEL_DATA:SET_WHEN_LOCKED',
-        'MODEL_DATA:CANNOT_CHANGE_ID',
-        'MODEL_DATA:DATETIME_VALUE_EXPECTED_FOR_COLUMN',
-        'MODEL_DATA:SCALAR_VALUE_EXPECTED_FOR_COLUMN',
-        'MODEL_DATA:MODEL_EXPECTED_FOR_KEY',
-        'MODEL_DATA:ARRAY_EXPECTED_FOR_PIVOT',
-        'MODEL_DATA:MODEL_EXPECTED_IN_PIVOT_ARRAY',
-        'MODEL_DATA:CANNOT_SET_EXTERNAL_KEYS_TO_THIS_TABLE',
-        'MODEL_DATA:UNEXPECTED_COLUMN_NAME',
-        'MODEL_DATA_UPDATE:PIVOT_INCORRECT_OBJECT_TYPE'
-    );
-
     public function __construct($code, $data = null, \Exception $previous_exception = null)
     {
         $message = $this->make_message($code, $data);

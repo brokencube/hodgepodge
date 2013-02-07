@@ -10,20 +10,10 @@ class Socket extends Generic
 	public function __construct($socket = null)
 	{
 		if ($socket) {
-			parent::__construct(socket_last_error($socket), 'Socket error');
+			parent::__construct('SOCKET_ERROR', socket_strerror(socket_last_error($socket)), $socket);
 			socket_clear_error($socket);
 		} else {
-			parent::__construct(socket_last_error(), 'Socket error');
+			parent::__construct('SOCKET_ERROR', socket_strerror(socket_last_error()));
 		}
 	}
-	
-	public function get_error()
-    {
-        return $this->errorcode;
-    }
-    
-	public function get_error_string()
-    {
-        return socket_strerror($this->errorcode);
-    }
 }

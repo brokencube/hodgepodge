@@ -3,40 +3,26 @@ namespace LibNik\Exception;
 
 class Generic extends \RuntimeException
 {
-	protected $errorcode;
-	protected $errorcodes = array();
-	protected $data;
+	protected static $label_messages = array();
 
-	public function __construct($code = 0, $message = null, $data = null, \Exception $previous_exception = null)
+	protected $label;   // A codeword for easy exception recognition
+	protected $data;    // Any data associated with the exception (e.g parameters that caused the exception)
+
+	public function __construct($label = 'UNKNOWN', $message = null, $data = null, \Exception $previous_exception = null)
 	{
-		$this->errorcode = $code;
+		$this->label = $label;
 		
-		if (!is_numeric($code))
-		{
-			$code = array_search($code, $this->errorcodes);
-		}
-		
-		parent::__construct($message, (int) $code, $previous_exception);
+		parent::__construct($message, 0, $previous_exception);
 		$this->data = $data;
 	}
 
-	public function get_data()
+	public function getData()
 	{
 		return $this->data;
 	}
-	
-	public function get_message()
-	{
-		return $this->getMessage();
-	}
 
-	public function get_code()
+	public function getLabel()
 	{
-		return $this->getCode();
+		return $this->label;
 	}
-
-	public function is($code)
-	{
-		return ($code === $this->errorcode);
-	}	
 }
