@@ -1,30 +1,43 @@
 <?php
-namespace LibNik\Core;
+namespace LibNik\Template;
 
-class SmartyTemplate extends Smarty
-{    
-    static function render($template, $data = array())
+use LibNik\Interfaces\Templater;
+
+class Smarty extends \Smarty implements Templater
+{
+    /* INTERFACE METHODS */
+    public static function page($template, $data = array())
     {
         $tpl = new static();
         $tpl->assign('data', $data);
-        return $tpl->fetch($template);        
+        echo $tpl->fetch($template);
     }
 
-    function __construct()
+    // Assign function dictated by Templater interface provided by underlying \Smarty class
+    #public function assign($name, $value)
+    
+    public function render($template)
+    {
+        return $this->fetch($template);
+    }
+    
+    //////////
+    
+    public function __construct()
     {
         global $config;
         // Class Constructor.
         
         parent::__construct();
         
-        $this->template_dir = $config['smarty']['dir'].'/templates';
-        $this->compile_dir  = $config['smarty']['dir'].'/templates_c';
-        $this->config_dir   = $config['smarty']['dir'].'/config';
-        $this->cache_dir    = $config['smarty']['dir'].'/cache';
+        $this->template_dir = WEBROOT.'/templates';
+        $this->compile_dir  = WEBROOT.'/templates_c';
+        $this->config_dir   = WEBROOT.'/config';
+        $this->cache_dir    = WEBROOT.'/cache';
         
-        $this->registerPlugin('modifier', 'currency', array('\\LibNik\\Core\\SmartyTemplate', 'smartyModifierCurrency'));
-        $this->registerPlugin('modifier', 'safe', array('\\LibNik\\Core\\SmartyTemplate', 'smartyModifierSafe'));
-        $this->registerPlugin('modifier', 'reformat_date', array('\\LibNik\\Core\\SmartyTemplate', 'smartyModifierReformatDate'));
+        $this->registerPlugin('modifier', 'currency', array('\\LibNik\\Template\\Smarty', 'smartyModifierCurrency'));
+        $this->registerPlugin('modifier', 'safe', array('\\LibNik\\Template\\Smarty', 'smartyModifierSafe'));
+        $this->registerPlugin('modifier', 'reformat_date', array('\\LibNik\\Template\\Smarty', 'smartyModifierReformatDate'));
         
         $this->assign('config', $config);
     }
