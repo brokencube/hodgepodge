@@ -37,7 +37,7 @@ class Smarty extends \Smarty implements Templater
         
         $this->registerPlugin('modifier', 'currency', array('\\LibNik\\Template\\Smarty', 'smartyModifierCurrency'));
         $this->registerPlugin('modifier', 'safe', array('\\LibNik\\Template\\Smarty', 'smartyModifierSafe'));
-        $this->registerPlugin('modifier', 'reformat_date', array('\\LibNik\\Template\\Smarty', 'smartyModifierReformatDate'));
+        $this->registerPlugin('modifier', 'datetime', array('\\LibNik\\Template\\Smarty', 'smartyModifierReformatDate'));
         
         $this->assign('config', $config);
     }
