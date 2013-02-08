@@ -8,7 +8,7 @@ Dependancies for specific functionality
 * MySQL 5.0+ (For database classes)
 * Imagick extension (For image class)
 * Linux OS (For socket classes)
-* Smarty3 (For templates)
+* Smarty3 or RainTPL3 (For templates)
 
 I plan to change some of the dependancies above in the future (in particular looking to replace Cache_Lite, and possible add RainTPL as an alternative to Smarty)
 
