@@ -9,8 +9,6 @@ class Scribe
         'js' => array(),      // Array of js files to include
         'meta' => '',         // <meta keywords> tag
         'title' => '',        // <title> tag
-        
-        'options' => array(),
     );
     
     const ENGINE_SMARTY = '\\LibNik\\Template\\Smarty';
@@ -18,7 +16,7 @@ class Scribe
     
     protected static $engine = Scribe::ENGINE_SMARTY;
     
-    static function page($template, $data = array())
+    public static function page($template, $data = array())
     {
         if (!$template) throw new Exception\Generic(0, 'No template given');
         
@@ -52,8 +50,6 @@ class Scribe
 
     public static function maintenence()
     {
-        foreach(self::$display['options'] as &$opt) $opt = false;
-        
         header("HTTP/1.1 503 Service Unavailable");
         self::page(array(), 'standard/maintenence.tpl');
         exit;
@@ -62,28 +58,28 @@ class Scribe
     ///////////////////////
 
     // A whole load of 'set' functions to add (deduplicated) data to the display instance
-    static function add_js()
+    static function add_js(array $array)
     {
-        self::$display['js'] = array_unique(array_merge(self::$display['js'], func_get_args()));
+        self::$display['js'] = array_unique(array_merge(self::$display['js'], $array));
     }
 
-    static function add_lesscss()
+    static function add_lesscss(array $array)
     {
-        self::$display['lesscss'] = array_unique(array_merge(self::$display['lesscss'], func_get_args()));
+        self::$display['lesscss'] = array_unique(array_merge(self::$display['lesscss'], $array));
     }
 
-    static function add_css()
+    static function add_css(array $array)
     {
-        self::$display['css'] = array_unique(array_merge(self::$display['css'], func_get_args()));
+        self::$display['css'] = array_unique(array_merge(self::$display['css'], $array));
     }
 
-    static function add_meta($name, $content)
+    static function add_meta(array $array)
     {
-        self::$display['meta'][$name] = $content;
+        self::$display['meta'] = array_unique(array_merge(self::$display['meta'], $array));
     }
 
     static function title($title)
     {
-        self::$display['title'] = 'Skeleton Project - ' . $title;
+        self::$display['title'] = $title;
     }
 }

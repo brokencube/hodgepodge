@@ -30,10 +30,10 @@ class Smarty extends \Smarty implements Templater
         
         parent::__construct();
         
-        $this->template_dir = WEBROOT.'/templates';
-        $this->compile_dir  = WEBROOT.'/templates_c';
-        $this->config_dir   = WEBROOT.'/config';
-        $this->cache_dir    = WEBROOT.'/cache';
+        $this->template_dir = ROOT.'/templates';
+        $this->compile_dir  = ROOT.'/templates_c';
+        $this->config_dir   = ROOT.'/config';
+        $this->cache_dir    = ROOT.'/cache';
         
         $this->registerPlugin('modifier', 'currency', array('\\LibNik\\Template\\Smarty', 'smartyModifierCurrency'));
         $this->registerPlugin('modifier', 'safe', array('\\LibNik\\Template\\Smarty', 'smartyModifierSafe'));
