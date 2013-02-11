@@ -38,7 +38,7 @@ class Scribe
         $tpl->assign('display',	self::$display);
         $tpl->assign('data', $data);
         
-        $tpl->render($template);
+        echo $tpl->render($template);
     }
 
     public static function HTTP_404()

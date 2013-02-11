@@ -9,7 +9,7 @@ class Autoload
     public function __construct($namespace, $dir)
     {
         $this->namespace = $namespace;
-        $this->dir = $dir;
+        $this->dir = $dir . (substr($dir, -1) != '/' ? '/' : '');
     }
     
     public static function register($namespace, $dir)
