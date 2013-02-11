@@ -21,7 +21,7 @@ use LibNik\Exception;
  * * Foreign key columns must end in '_id'
  */
 
-class Model implements JsonSerializable
+class Model implements \JsonSerializable
 {
     public static $dbconnection = 'default'; // Override database connection associated with this class - for subclasses
     public static $tablename;                // Override table associated with this class - for subclasses
@@ -435,7 +435,7 @@ class Model implements JsonSerializable
                 $property = substr($function,10);
                 if (substr($function,0,10) == '_property_')
                     $data['columns'][$property] = $obj->$property;
-            }            
+            }
             
             $data['columns'] = $data['columns'] + $obj->db()->var_dump();
             $data['schema'] = $obj::$schema[$obj::$dbconnection][$class];

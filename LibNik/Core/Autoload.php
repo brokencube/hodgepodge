@@ -27,10 +27,10 @@ class Autoload
         if ($lastNsPos = strrpos($classname, '\\')) {
             $namespace = substr($classname, 0, $lastNsPos);
             $classname = substr($classname, $lastNsPos + 1);
-            $fileName  = str_replace('\\', DIRECTORY_SEPARATOR, $namespace) . DIRECTORY_SEPARATOR;
+            $filename  = str_replace('\\', DIRECTORY_SEPARATOR, $namespace) . DIRECTORY_SEPARATOR;
         }
         
-        $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $classname) . '.php';
+        $filename .= str_replace('_', DIRECTORY_SEPARATOR, $classname) . '.php';
         
         require $this->dir . $filename;
     }
