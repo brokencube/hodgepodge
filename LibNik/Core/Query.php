@@ -155,7 +155,7 @@ class Query
         }                        
         
         // Log the query with Log::
-        Log::get()->log_query($this);
+        Log::get()->logQuery($this);
         
         // If we had an error and are using exceptions, throw one.
         if ($this->debug['error']) {

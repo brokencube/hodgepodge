@@ -1,7 +1,7 @@
 <?php
 namespace LibNik\Common;
 
-abstract class Collection implements ArrayAccess, Iterator, Countable, JsonSerializable
+abstract class Collection implements \ArrayAccess, \Iterator, \Countable, \JsonSerializable
 {
     protected $container;
 
