@@ -3,7 +3,7 @@
  * 
  * Core\Cache >>> Cache_Lite (https://pear.php.net/package/Cache_Lite/)
  * Core\SmartyTemplate >>> Smarty3 (http://www.smarty.net/)
- * Core\DB, Core\Query, Orm\* >>> Mysql 5.0+
+ * Core\Database, Core\Query, Orm\* >>> Mysql 5.0+
  * Core\Image >>> IMagick PHP extension
  * Core\Socket >>> Linux OS 
  */

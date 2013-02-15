@@ -3,6 +3,7 @@ namespace LibNik\Core;
 
 use LibNik\Exception;
 use LibNik\Orm;
+use LibNik\Common\SqlString;
 
 class Query
 {
@@ -13,7 +14,7 @@ class Query
     protected $lock = false;
     
     protected $debug;
-        
+    
     // Readonly access to object properties
     public function __get($var) {
         switch($var) {
@@ -25,12 +26,12 @@ class Query
                 return $this->{$var};
         }
         return $this->debug[$var];
-    } 
+    }
     
-    // Static version of constructor for oneliners    
+    // Static version of constructor for oneliners
     static public function create($connection_name = 'default', $sql = null)
     {
-        return new Query($connection_name, $sql);    
+        return new Query($connection_name, $sql);
     }
     
     static public function run($sql, $connection_name = 'default')
@@ -41,7 +42,7 @@ class Query
     // Create a new query container
     public function __construct($connection_name = 'default', $sql = null)
     {
-        if (!$this->mysql = DB::autoconnect($connection_name)) {
+        if (!$this->mysql = Database::autoconnect($connection_name)) {
             throw new Exception\Database('CONNECTION_NOT_DEFINED', "Database connection '$name' does not exist");
         }
         $this->name = $connection_name;
@@ -51,7 +52,7 @@ class Query
     // Add arbitary SQL to the query queue
     public function sql($sql)
     {
-        $this->sql[] = trim($sql);        
+        $this->sql[] = trim($sql);
         return $this;
     }
     
@@ -143,16 +144,16 @@ class Query
         $this->debug['total_time'] = microtime(true) - $total_time;
         $this->debug['count'] = $count;
         
-        if ($mysql->warning_count) {            
-            $e = $mysql->get_warnings(); 
-            do { 
-                $this->debug['warnings'][] = "{$e->errno}: {$e->message}\n"; 
-            } while ($e->next());                 
+        if ($mysql->warning_count) {
+            $e = $mysql->get_warnings();
+            do {
+                $this->debug['warnings'][] = "{$e->errno}: {$e->message}\n";
+            } while ($e->next());
         }
         
         if ($mysql->error) {
             $this->debug['error'] = "{$mysql->errno}: {$mysql->error}\n";
-        }                        
+        }
         
         // Log the query with Log::
         Log::get()->logQuery($this);
@@ -180,7 +181,7 @@ class Query
     
     protected function createQuery($table, $data, $type, $where = array(), QueryOptions $options = null)
     {
-        switch($type) {            
+        switch($type) {
             // Queries that need building
             case 'count':
                 $query = 'SELECT count(*) as count FROM ' . $table;
@@ -223,17 +224,17 @@ class Query
                     if ($value instanceof SqlString) {
                         $where_array[] = (string) $value;
                     } else {
-                        $where_array[] = $this->createQueryPart($column, $value);    
+                        $where_array[] = $this->createQueryPart($column, $value);
                     }
                 }
-                $query .= " WHERE " . implode("\n AND ", $where_array);                
+                $query .= " WHERE " . implode("\n AND ", $where_array);
             }
         }
         
         // Update clause for REPLACE
         if ($type == 'replace') {
             // Doing a nasty MySQL trick here to keep last_insert_id consistant: see http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html
-            $data[$id_column] = DB::sql("LAST_INSERT_ID($id_column)");            
+            $data[$id_column] = new SqlString("LAST_INSERT_ID($id_column)");
             foreach ($data as $column => $value) {
                 $update_array[] = $this->createQueryPart($column, $value);
             }
@@ -262,7 +263,7 @@ class Query
             case $value instanceof Orm\Time:
                 return $col . "'" . $value->mysql() . "'";
             
-            case is_int($value) || is_float($value): 
+            case is_int($value) || is_float($value):
                 return $col . $value;
             
             case is_null($value):
@@ -276,14 +277,14 @@ class Query
                             break;
                         
                         case is_string($var):
-                            $in[] = "'".  DB::escape($var, $this->name). "'";
+                            $in[] = "'".  Database::escape($var, $this->name). "'";
                             break;
                     }
                 }
                 return "`$column` in (" . implode(", ", $in) . ")";
             
             default:
-                return $col . "'" . DB::escape((string) $value, $this->name) . "'";
+                return $col . "'" . Database::escape((string) $value, $this->name) . "'";
         }
         return $part;
     }

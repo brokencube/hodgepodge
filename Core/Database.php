@@ -3,7 +3,7 @@ namespace LibNik\Core;
 
 use LibNik\Exception;
 
-class DB
+class Database
 {
     protected static $connections = array();
     protected static $details = array();
