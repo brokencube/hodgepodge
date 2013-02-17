@@ -1,6 +1,8 @@
 <?php
 namespace LibNik\Core;
 
+use LibNik\Exception;
+
 class Scribe
 {
     protected static $display = array(
