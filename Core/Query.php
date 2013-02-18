@@ -108,21 +108,16 @@ class Query
             array_unshift($this->sql, 'START TRANSACTION;');
             array_push($this->sql, 'COMMIT;');
         }
-        
-        // Concatenate all the queries together for multi_query function
-        $query = implode("\n", $this->sql);
-        
-        $mysql = $this->mysql;
-        
+                
+        $count = 0;
         foreach($this->sql as $query) {
             // Do the database query
-            if ($mysql->multi_query($query)) {
-                $count = 0;
+            if ($this->mysql->multi_query($query)) {
                 do {
                     $return[$count] = array();
                     
                     // If we have a result set, collated it into an array of rows
-                    if ($result = $mysql->store_result()) {
+                    if ($result = $this->mysql->store_result()) {
                         while($row = $result->fetch_array(MYSQLI_ASSOC)) {
                             $return[$count][] = $row;
                         }
@@ -132,11 +127,11 @@ class Query
                     }
                     
                     // Store some useful data about this set of results
-                    $this->debug['insert_id'][$count] = $mysql->insert_id;
-                    $this->debug['affected_rows'][$count] = $mysql->affected_rows;
+                    $this->debug['insert_id'][$count] = $this->mysql->insert_id;
+                    $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
                     $count++;
                     
-                } while($mysql->next_result());
+                } while($this->mysql->next_result());
             }            
         }
         
@@ -144,15 +139,15 @@ class Query
         $this->debug['total_time'] = microtime(true) - $total_time;
         $this->debug['count'] = $count;
         
-        if ($mysql->warning_count) {
-            $e = $mysql->get_warnings();
+        if ($this->mysql->warning_count) {
+            $e = $this->mysql->get_warnings();
             do {
                 $this->debug['warnings'][] = "{$e->errno}: {$e->message}\n";
             } while ($e->next());
         }
         
-        if ($mysql->error) {
-            $this->debug['error'] = "{$mysql->errno}: {$mysql->error}\n";
+        if ($this->mysql->error) {
+            $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
         }
         
         // Log the query with Log::
