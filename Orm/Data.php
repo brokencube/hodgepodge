@@ -65,18 +65,18 @@ class Data
         
 		if (key_exists($var, (array) $this->model['one-to-one'])) {		
 			/* Call Tablename::factory(foreign key id) to get the object we want */
-			$classname = $this->model['one-to-one'][$var];
+			$table = $this->model['one-to-one'][$var];
 			$id = $this->data['id'];
-			$this->external[$var] = Model::factoryObjectCache($id, $classname, $this->database);
+			$this->external[$var] = Model::factoryObjectCache($id, $table, $this->database);
 			
 			return $this->external[$var];
 		}
 		
 		if (key_exists($var, (array) $this->model['many-to-one'])) {		
 			/* Call Tablename::factory(foreign key id) to get the object we want */
-			$classname = $this->model['many-to-one'][$var];
+			$table = $this->model['many-to-one'][$var];
 			$id = $this->data[$var . '_id'];
-			$this->external[$var] = Model::factoryObjectCache($id, $classname, $this->database);
+			$this->external[$var] = Model::factoryObjectCache($id, $table, $this->database);
 			
 			return $this->external[$var];
 		}
@@ -86,11 +86,11 @@ class Data
 			// If this Model_Data isn't linked to the db yet, then linked values cannot exist
 			if (!$id = $this->data['id']) return array();
 			
-			$classname = $this->model['one-to-many'][$var]['table'];
+			$table = $this->model['one-to-many'][$var]['table'];
 			$column = $this->model['one-to-many'][$var]['column_name'];
 			
 			// Use the model factory to find the relevant items
-			$this->external[$var] = Model::factory(array($column => $id), $classname, $this->database);
+			$this->external[$var] = Model::factory(array($column => $id), $table, $this->database);
 			
 			return $this->external[$var];
 		}
