@@ -201,7 +201,7 @@ class Data
 		
 		// Get the id we just inserted/updated
 		if ($this->new) {
-			$id = $query->insert_id(0);
+			$id = $query->insertId(0);
 			$this->new = false;
 		} else {
 			$id = $this->data['id'];
