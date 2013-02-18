@@ -1,7 +1,7 @@
 <?php
 namespace LibNik\Core;
 
-class Cache extends Cache_Lite
+class Cache extends \Cache_Lite
 {
     static public $lifetime = array('default' => 3600);
 
