@@ -16,7 +16,7 @@ class Scribe
     const ENGINE_SMARTY = '\\LibNik\\Template\\Smarty';
     const ENGINE_RAIN = '\\LibNik\\Template\\Rain';
     
-    protected static $engine = Scribe::ENGINE_SMARTY;
+    public static $engine = Scribe::ENGINE_SMARTY;
     
     public static function page($template, $data = array())
     {
