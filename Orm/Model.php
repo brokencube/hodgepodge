@@ -26,21 +26,22 @@ class Model implements \JsonSerializable
     public static $dbconnection = 'default'; // Override database connection associated with this class - for subclasses
     public static $tablename;                // Override table associated with this class - for subclasses
     public static $schema;                   // Database schema, as read in by Model::generate_schema();
+    public static $namespace;                // List of namespaces for schemas. Should really be merged into $schema in future!
     protected static $instance;              // An internal store of already created objects so that objects for each row only get created once
-
+    
     /* PUBLIC CONSTRUCTION METHODS */
     public static function get($id, $force_refresh = false)
     {
         return static::factoryObjectCache($id, null, null, $force_refresh);
     }
-
+    
     // Find a single(!) object via an arbitary $where clause
     public static function find($where)
     {
         $o = new Core\QueryOptions();
         return static::factory($where, null, null, $o->limit(1), true);
     }
-
+    
     // Find a collection of objects via an arbitary $where clause
     public static function findAll($where = array(), $limit = null, $offset = 0, $sort = null)
     {
@@ -57,7 +58,7 @@ class Model implements \JsonSerializable
         if (!$database) $database = static::$dbconnection;
         
         // Figure out the base class and table we need based on current context
-        list($base_class, $table) = static::getFactoryContext($class_or_table_name);
+        list($base_class, $table) = static::getFactoryContext($class_or_table_name, $database);
         
         // Get data from database        
         $data = Model::factoryData($where, $table, $database, $options);
@@ -94,7 +95,7 @@ class Model implements \JsonSerializable
         // Return the collection.
         return $collection;
     }
-
+    
     protected static function _subclass(Data $data)
     {
         return get_called_class();
@@ -108,7 +109,7 @@ class Model implements \JsonSerializable
         
         if (!$force_refresh) {
             // Check Model object cache
-            list($class, $table) = static::getFactoryContext($class_or_table);        
+            list($class, $table) = static::getFactoryContext($class_or_table, $database);        
             if (isset(Model::$instance[$database][$table][$id])) {
                 return Model::$instance[$database][$table][$id];
             }
@@ -118,7 +119,7 @@ class Model implements \JsonSerializable
         $o = new Core\QueryOptions();
         return static::factory(array('id' => $id), $class_or_table, $database, $o->limit(1), true);
     }
-        
+    
     // Get data from database from which we can construct Model objects
     final protected static function factoryData($where, $table, $database, Core\QueryOptions $options = null)
     {        
@@ -131,24 +132,40 @@ class Model implements \JsonSerializable
                 
         return $data;
     }
-
+    
     // Based on supplied data, and the current class, figure out what class + db table we should be contructing.
-    final protected static function getFactoryContext($class_or_table = null)
+    final protected static function getFactoryContext($class_or_table, $database)
     {
+        // Retrieve the model namespace for the database we are using
+        $namespace = Model::$namespace[$database];
+        
         // Use the supplied table/class name, or fall back to the name of the current class
         $class_or_table = strtolower($class_or_table ?: get_called_class());
         
-        // If the named class exists, then we are making one of those objects, otherwise a generic Model object.
-        if (class_exists($class_or_table)) {
-            // Does this class have a different table, otherwise base it on the class name
-            $table = $class_or_table::$tablename ?: $class_or_table;
-            $class = $class_or_table;
+        // Guess the table name -- $class_or_table will either be:
+        // A) The table name (use as is)
+        // B) The (global) class name (assume class is named same as table)
+        // or C) The namespaced class name (strip namespace and use as above)
+        if (strrpos($class_or_table, '\\') !== false) {
+            $table = strtolower(substr($class_or_table, strrpos($class_or_table, '\\') + 1));
         } else {
-            // We don't have a class - use the 'class' name as the table name, and make a Model object.
-            $table = $class_or_table;
-            $class = 'model';
+            $table = strtolower($class_or_table);
         }
-        return array($class, $table);
+        
+        // Use the stripped table name + namespace to guess a classname.
+        // Table names are lowercase+underscores, Classnames are camelcase
+        $class = $namespace . '\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $table)));
+        
+        // If the guessed classname exists, then we are making one of those objects.
+        if (class_exists($class)) {
+            // Does this class have a different table, otherwise base it on the class name
+            $return = array($class, $class::$tablename ?: $table);
+        } else {
+            // We didn't find an appropriate class - make a Model object using the guessed Table name.
+            $return = array('LibNik\\Orm\\Model', $table);
+        }
+        
+        return $return;
     }
     
     // Return an empty Model_Data object for this class/table so that a new object can be constructed (and a new row entered in the table).
@@ -157,7 +174,7 @@ class Model implements \JsonSerializable
     {
         // Get the schema for the current class/table
         $database = static::$dbconnection;
-        list($class, $table) = static::getFactoryContext();
+        list($class, $table) = static::getFactoryContext(null, $database);
         if (!Model::$schema[$database][$table]) throw new Exception\Model('NO_SCHEMA', array($database, $class, $table, static::$tablename));
         
         // Make a new blank data object
@@ -270,10 +287,10 @@ class Model implements \JsonSerializable
         $this->cache = $bool;
         return $this;
     }
-
+    
     ////////////////////////////////////
     /* Reverse engineer a database to calculate links between tables */
-    public static function generateSchema($dbconnection = null, $override_cache = false)
+    public static function generateSchema($dbconnection = null, $namespace = 'models', $override_cache = false)
     {
         if (!$dbconnection) $dbconnection = 'default';
         
@@ -351,7 +368,7 @@ class Model implements \JsonSerializable
                     );
                     
                     $model[$pivotname]['type'] = 'pivot';
-                                        
+                    
                     // Remove the M-1 keys for this table to encapsulate the M-M scheme.
                     foreach((array) $model[ $table[0]['table'] ][ 'one-to-many' ] as $key => $val) {
                         if ($val['table'] == $pivotname) unset ($model[ $table[0]['table'] ][ 'one-to-many' ][$key]);
@@ -366,6 +383,7 @@ class Model implements \JsonSerializable
             $cache($model);
         }
         
+        Model::$namespace[$dbconnection] = $namespace;
         return Model::$schema[$dbconnection] = $model;
     }
 }
