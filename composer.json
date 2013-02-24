@@ -1,0 +1,22 @@
+{
+    "name": "brokencube/LibNik",
+    "description": "Personal web framework with schema-led ORM",
+    "type": "library",
+    "keywords": "ORM, Lightweight",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nik Barham",
+            "email": "libnik@brokencube.co.uk",
+            "homepage": "http://www.brokencube.co.uk",
+            "role": "Lead Developer"
+        },    
+    ],
+    "require": {
+        "smarty/smarty": "3.1.*",
+        "rain/raintpl": "3.0.0"
+    },
+    "autoload": {    
+      "psr-0": { "LibNik": "lib/" }
+    },
+}
