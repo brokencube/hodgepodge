@@ -277,6 +277,17 @@ class Model implements \JsonSerializable
         return $this->_data->{$var};
     }
     
+    public function __isset($var)
+    {
+        if (property_exists($this, $var)) return true;
+        
+        // If a special property method exists, then in effect the property exists, even if it hasn't been materialised yet.
+        if (method_exists($this, '_property_'.$var)) return true;
+        
+        // Check the Data object
+        return isset($this->_data->{$var});
+    }
+    
     final public function data()
     {
         return clone $this->_data;

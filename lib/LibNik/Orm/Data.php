@@ -116,6 +116,21 @@ class Data
 		}
 	}
 
+    public function __isset($var)
+    {
+        // Is it already set in local array?
+		if (isset($this->data[$var])) return true;
+		if (isset($this->external[$var])) return true;
+        
+        // Check through all the possible foreign keys for a matching name
+		if (key_exists($var, (array) $this->model['one-to-one'])) return true;		
+		if (key_exists($var, (array) $this->model['many-to-one'])) return true;
+		if (key_exists($var, (array) $this->model['one-to-many'])) return true;
+		if (key_exists($var, (array) $this->model['many-to-many'])) return true;
+        
+        return false;
+    }
+    
 	public function __set($var, $value)
 	{
 		// Cannot change data if it is locked (i.e. it is attached to a Model object)
