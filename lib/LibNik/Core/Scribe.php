@@ -13,6 +13,8 @@ class Scribe
         'title' => '',        // <title> tag
     );
     
+    public static $extras = array();
+    
     const ENGINE_SMARTY = '\\LibNik\\Template\\Smarty';
     const ENGINE_RAIN = '\\LibNik\\Template\\Rain';
     
@@ -35,6 +37,7 @@ class Scribe
             }
         }
         
+        $tpl->assign(static::$extras);
         $tpl->assign('path', Router::path());
         $tpl->assign('env',	$env);
         $tpl->assign('display',	self::$display);
