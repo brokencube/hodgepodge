@@ -14,7 +14,7 @@
     ],
     "require": {
         "smarty/smarty": "3.1.*",
-        "rain/raintpl": "3.0.0"
+        "rain/raintpl": "dev-master"
     },
     "autoload": {    
       "psr-0": { "LibNik": "lib" }
