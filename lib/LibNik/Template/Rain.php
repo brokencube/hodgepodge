@@ -28,8 +28,6 @@ class Rain extends \Rain\Tpl implements Templater
         global $config;
         // Class Constructor.
         
-        parent::__construct();
-        
         $this->objectConfigure(array(
             'base_url' => null,
             'tpl_dir' => WEBROOT.'/templates',
