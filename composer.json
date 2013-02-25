@@ -10,7 +10,7 @@
             "email": "libnik@brokencube.co.uk",
             "homepage": "http://www.brokencube.co.uk",
             "role": "Lead Developer"
-        },    
+        }    
     ],
     "require": {
         "smarty/smarty": "3.1.*",
