@@ -20,5 +20,5 @@ if (!interface_exists('JsonSerializable', false))
 }
 
 // Start up the autoloader
-require_once __DIR__ . '/Core/Autoload.php'; // Load autoloader
-\LibNik\Core\Autoload::register('LibNik\\', dirname(__DIR__));
+require_once __DIR__ . '/lib/LibNik/Core/Autoload.php'; // Load autoloader
+\LibNik\Core\Autoload::register('LibNik\\', __DIR__ . '/lib');
