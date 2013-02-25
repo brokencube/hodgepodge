@@ -27,7 +27,7 @@ class Collection extends Common\Collection
     {
         if (is_null($array)) $array = array();
         if ($array instanceof Collection) $array = $array->to_array();
-        if (!is_array($array)) throw new InvalidArgumentException('Model_Collection::__construct() expects an array - ' . gettype($array) . ' given');
+        if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection::__construct() expects an array - ' . gettype($array) . ' given');
         
         $this->container = $array;
     }
@@ -59,12 +59,12 @@ class Collection extends Common\Collection
     
     public function slice($start, $length)
     {
-        return new Model_Collection(array_slice($this->container, $start, $length));
+        return new static(array_slice($this->container, $start, $length));
     }
     
     public function reverse()
     {
-        return new Model_Collection(array_reverse($this->container));
+        return new static(array_reverse($this->container));
     }
     
     // Merge another array into this collection
@@ -76,7 +76,7 @@ class Collection extends Common\Collection
     public function add($array)
     {
         if ($array instanceof Collection) $array = $array->to_array();
-        if (!is_array($array)) throw new InvalidArgumentException('Model_Collection->add() expects an array');
+        if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection->add() expects an array');
         
         $this->container = array_values(array_merge($this->container, $array));
         
