@@ -89,7 +89,7 @@ class Env
     /* PUBLIC CONTROL FUNCTIONS */
     protected function __construct() 
     {
-        $this->site_mode = $_SERVER['SITE_MODE'] == 'live' ? 'live' : 'development';        
+        $this->site_mode = $_SERVER['PARAM1'] == 'live' ? 'live' : 'development';
         $this->secure = ($_SERVER['HTTPS'] == 'on');
         
         preg_match('#[-_/]([^-_/]+?)(/webroot)?/?$#', $_SERVER['DOCUMENT_ROOT'], $matches);
