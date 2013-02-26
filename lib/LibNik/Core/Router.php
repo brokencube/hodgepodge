@@ -42,7 +42,7 @@ class Router
         
         // Lookup specific extensions for alternate directories
         if (!$extension) $extension = 'html';
-        $dir = static::$lookups['html'];
+        $dir = static::$lookups[$extension];
         
         // Assemble the desired filename
         static::$filename = $dir . '/' . $file . '.php';
