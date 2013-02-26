@@ -9,7 +9,7 @@ class Scribe
         'css' => array(),     // Array of css files to include
         'lesscss' => array(), // Array of lesscss files to include
         'js' => array(),      // Array of js files to include
-        'meta' => '',         // <meta keywords> tag
+        'meta' => array(),    // <meta> tags
         'title' => '',        // <title> tag
     );
     
@@ -85,7 +85,7 @@ class Scribe
     
     static function description($description)
     {
-        self::add_meta(['description' => $description]);
+        self::add_meta(array('description' => $description));
     }
 
     static function title($title)
