@@ -41,13 +41,8 @@ class Router
         if (!$file) $file = static::$default;
         
         // Lookup specific extensions for alternate directories
-        if ($extension) {
-            $dir = static::$lookups[$extension];
-        } elseif (Env::get()->mobileBrowser()) {
-            $dir = static::$lookups['mobile'];
-        } else {
-            $dir = static::$lookups['html'];
-        }
+        if (!$extension) $extension = 'html';
+        $dir = static::$lookups['html'];
         
         // Assemble the desired filename
         static::$filename = $dir . '/' . $file . '.php';
