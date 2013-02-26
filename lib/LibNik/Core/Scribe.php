@@ -82,6 +82,11 @@ class Scribe
     {
         self::$display['meta'] = array_unique(array_merge(self::$display['meta'], $array));
     }
+    
+    static function description($description)
+    {
+        self::add_meta(['description' => $description]);
+    }
 
     static function title($title)
     {
