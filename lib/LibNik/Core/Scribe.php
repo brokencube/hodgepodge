@@ -62,6 +62,8 @@ class Scribe
 
     ///////////////////////
 
+    /* [FIXME] Need to clean up below to be PSR-1 compliant */
+    
     // A whole load of 'set' functions to add (deduplicated) data to the display instance
     static function add_js(array $array)
     {

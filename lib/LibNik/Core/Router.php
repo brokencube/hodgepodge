@@ -108,4 +108,9 @@ class Router
         header("Location: $url");
         exit;
     }
+
+    public static function addLookup(array $array)
+    {
+        static::$lookups = array_merge(static::$lookups, $array);
+    }
 }
