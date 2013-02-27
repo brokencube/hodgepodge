@@ -39,7 +39,7 @@ class Scribe
         
         $tpl->assign(static::$extras);
         $tpl->assign('path', Router::path());
-        $tpl->assign('env',	$env);
+        $tpl->assign('env', $env);
         $tpl->assign('display',	self::$display);
         $tpl->assign('data', $data);
         
@@ -49,14 +49,14 @@ class Scribe
     public static function HTTP_404()
     {
         header("HTTP/1.0 404 Not Found");
-        self::page($data, 'standard/404.tpl');
+        self::page('standard/404');
         exit;
     }
 
     public static function maintenence()
     {
         header("HTTP/1.1 503 Service Unavailable");
-        self::page(array(), 'standard/maintenence.tpl');
+        self::page('standard/maintenence');
         exit;
     }
 

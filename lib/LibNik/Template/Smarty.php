@@ -10,7 +10,7 @@ class Smarty extends \Smarty implements Templater
     {
         $tpl = new static();
         $tpl->assign('data', $data);
-        echo $tpl->fetch($template);
+        echo $tpl->render($template);
     }
 
     // Assign function dictated by Templater interface provided by underlying \Smarty class
@@ -18,7 +18,7 @@ class Smarty extends \Smarty implements Templater
     
     public function render($template)
     {
-        return $this->fetch($template);
+        return $this->fetch($template . '.tpl');
     }
     
     //////////
