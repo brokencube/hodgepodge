@@ -58,14 +58,14 @@ class Database
         $allok = true;
         if (!$name)
         {
-            foreach(self::$connections as $name => $db)
+            foreach(self::$connections as $conn => $db)
             {
-                $allok = self::$connections[$name]->ping() & $allok;
+                $allok = self::autoconnect($conn)->ping() & $allok;
             }
         }
         else
         {
-            $allok = self::$connections['name']->ping();
+            $allok = self::autoconnect($name)->ping();
         }
         return $allok;
     }
