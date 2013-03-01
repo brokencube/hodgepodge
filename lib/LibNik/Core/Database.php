@@ -51,6 +51,25 @@ class Database
         }
     }
     
+    // Check that a connection (or all connections) are still up and working
+    // Recommend using "ini_set('mysqli.reconnect', 'on');" in while(true) scripts
+    public static function ping($name = null)
+    {
+        $allok = true;
+        if (!$name)
+        {
+            foreach(self::$connections as $name => $db)
+            {
+                $allok = self::$connections[$name]->ping() & $allok;
+            }
+        }
+        else
+        {
+            $allok = self::$connections['name']->ping();
+        }
+        return $allok;
+    }
+
     public static function escape($string, $name = 'default')
     {
         return self::autoconnect($name)->real_escape_string($string);
