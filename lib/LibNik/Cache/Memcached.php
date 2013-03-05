@@ -20,7 +20,7 @@ class Memcached implements Interfaces\Cache
         
         list($server, $port) = explode(':', $config['memcache']['url']);
         $this->memcached = new \Memcached();
-        $this->add_server($server, $port);
+        $this->memcached->addServer($server, $port);
     }
 
     public function get()
