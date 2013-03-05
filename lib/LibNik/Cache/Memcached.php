@@ -36,7 +36,7 @@ class Memcached implements Interfaces\Cache
         global $config;
         if ($config['cache']['disable']) return false;
         
-        $lifetime = LibNik\Core\Cache::$lifetime[$this->group ?: 'default'] ?: 3600;
+        $lifetime = \LibNik\Core\Cache::$lifetime[$this->group ?: 'default'] ?: 3600;
         
         return $this->memcached->set($this->key, $contents, $lifetime);
     }
