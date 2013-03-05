@@ -19,7 +19,7 @@ class Memcached implements Interfaces\Cache
         $this->key = 'LibNik:Cache:' . $this->group . ':' . $this->id;
         
         list($server, $port) = explode(':', $config['memcache']['url']);
-        $this->memcached = new Memcached();
+        $this->memcached = new \Memcached();
         $this->add_server($server, $port);
     }
 
