@@ -26,11 +26,11 @@ class Router
          */
         preg_match(
             '/
-                ^\/?            # Anchor to start of path
-                ([^.\/]+)       # Grab the first part of the path (to be the filename), until either a dot or forwardslash is found
-                \/?(.*?)        # Grab the middle of the path (directory structure after first level)
-                (?:\.([^\/]+))? # Optionally, grab an "extension" e.g.   ".ajax" at the end of the path
-                $               # Anchor to end of path
+                ^\/?               # Anchor to start of path
+                ([^.\/]+)          # Grab the first part of the path (to be the filename), until either a dot or forwardslash is found
+                \/?(.*?)           # Grab the middle of the path (directory structure after first level)
+                (?:\.([a-zA-Z]+))? # Optionally, grab an "extension" e.g.   ".ajax" at the end of the path
+                $                  # Anchor to end of path
             /x',
             static::$path,
             $matches
