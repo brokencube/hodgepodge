@@ -32,6 +32,9 @@ class Autoload
         
         $filename .= str_replace('_', DIRECTORY_SEPARATOR, $classname) . '.php';
         
-        require $this->dir . $filename;
+        if (file_exists($this->dir . $filename))
+        {
+            require_once $this->dir . $filename;            
+        }
     }
 }
