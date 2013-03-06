@@ -4,7 +4,7 @@ Current dependancies:
 * PHP 5.3+ (5.4 recommended)
 
 Dependancies for specific functionality
-* PEAR Cache_Lite (For caching)
+* Memcached or PEAR Cache_Lite (For caching)
 * MySQL 5.0+ (For database classes)
 * Imagick extension (For image class)
 * Linux OS (For socket classes)
