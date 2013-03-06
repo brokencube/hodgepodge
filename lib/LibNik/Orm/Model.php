@@ -228,7 +228,7 @@ class Model implements \JsonSerializable
     // Called after we pull the object out of the session/cache (during the session_start() call, for example)
     public function __wakeup()
     {
-        if (!$this->cache) {
+        if (!$this->_data) {
             // Get the data about this object out of the database again (to make sure it's up to date)
             list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database); 
             
