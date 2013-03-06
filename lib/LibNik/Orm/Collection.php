@@ -9,8 +9,30 @@ class Collection extends Common\Collection
     {
         $list = array();
         foreach($this->container as $item) {
+            $value = $item->$parameter;
             if ($item instanceof Model) {
-                $value = $item->$parameter;
+                if ($value instanceof Collection) {
+                    $list = array_merge($list, $value->to_array());
+                } else {
+                    $list[] = $value;
+                }
+            } else {
+                $list[] = $value;
+            }
+        }
+        return new static($list);
+    }
+
+    public function __call($name, $arguments)
+    {
+        $list = array();
+        foreach($this->container as $item) {
+            if (!method_exists($item, $name)) {
+                throw new BadMethodCallException();
+            }
+            
+            $value = $item->$name($arguments);
+            if ($item instanceof Model) {
                 if ($value instanceof Collection) {
                     $list = array_merge($list, $value->to_array());
                 } else {

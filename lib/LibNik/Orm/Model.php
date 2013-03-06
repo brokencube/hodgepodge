@@ -253,7 +253,8 @@ class Model implements \JsonSerializable
     // we only need to keep the id and table/db to fully "rehydrate" the object.
     // If we are caching the object then keep the Model_Data object for this model.
     // [Note] Because we are not saving $cache, it will revert to null when the object is pulled out of the cache.
-    //        This is intentional to stop the object becoming stale if it moves from the cache and into the session, for example.
+    //        This is intentional to stop the object becoming stale if it moves from the cache and into another
+    //        serialized location (like the session, for example).
     
     public function __sleep()
     {
