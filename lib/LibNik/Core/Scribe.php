@@ -62,32 +62,16 @@ class Scribe
 
     ///////////////////////
 
-    /* [FIXME] Need to clean up below to be PSR-1 compliant */
-    
-    // A whole load of 'set' functions to add (deduplicated) data to the display instance
-    static function add_js(array $array)
+    // Add (deduplicated) data to the Scribe::$display variable
+    static function add($var, array $array)
     {
-        self::$display['js'] = array_unique(array_merge(self::$display['js'], $array));
-    }
-
-    static function add_lesscss(array $array)
-    {
-        self::$display['lesscss'] = array_unique(array_merge(self::$display['lesscss'], $array));
-    }
-
-    static function add_css(array $array)
-    {
-        self::$display['css'] = array_unique(array_merge(self::$display['css'], $array));
-    }
-
-    static function add_meta(array $array)
-    {
-        self::$display['meta'] = array_unique(array_merge(self::$display['meta'], $array));
+        self::$display[$var] = array_unique(array_merge(self::$display[$var], $array));
     }
     
+    // Couple of common helper functions
     static function description($description)
     {
-        self::add_meta(array('description' => $description));
+        self::add('meta', array('description' => $description));
     }
 
     static function title($title)
