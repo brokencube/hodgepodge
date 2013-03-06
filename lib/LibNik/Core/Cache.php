@@ -1,7 +1,7 @@
 <?php
 namespace LibNik\Core;
 
-class Cache extends \Cache_Lite
+class Cache
 {
     const MEMCACHED = 'LibNik\\Cache\\Memcached';
     const CACHE_LITE = 'LibNik\\Cache\\Cache_Lite';
