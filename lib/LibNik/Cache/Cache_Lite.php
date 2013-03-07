@@ -38,4 +38,13 @@ class Cache_Lite extends \Cache_Lite implements Interfaces\Cache
         
         return parent::save($contents, $this->cache_id, $this->cache_group);
     }
+
+    public function delete()
+    {
+        global $config;
+        if ($config['cache']['disable']) return false;
+        
+        return parent::remove($this->cache_id, $this->cache_group);
+    }
+    
 }

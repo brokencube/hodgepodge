@@ -40,4 +40,9 @@ class Cache
     {        
         return $this->obj->save($contents);
     }
+
+    public function delete()
+    {        
+        return $this->obj->delete();
+    }
 }

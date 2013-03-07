@@ -40,4 +40,12 @@ class Memcached implements Interfaces\Cache
         
         return $this->memcached->set($this->key, $contents, $lifetime);
     }
+    
+    public function delete()
+    {
+        global $config;
+        if ($config['cache']['disable']) return false;
+        
+        return $this->memcached->delete($this->key);        
+    }
 }
