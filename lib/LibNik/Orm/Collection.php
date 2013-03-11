@@ -12,7 +12,7 @@ class Collection extends Common\Collection
             $value = $item->$parameter;
             if ($item instanceof Model) {
                 if ($value instanceof Collection) {
-                    $list = array_merge($list, $value->to_array());
+                    $list = array_merge($list, $value->toArray());
                 } else {
                     $list[] = $value;
                 }
