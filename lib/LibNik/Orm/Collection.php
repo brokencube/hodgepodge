@@ -12,7 +12,7 @@ class Collection extends Common\Collection
             $value = $item->$parameter;
             if ($item instanceof Model) {
                 if ($value instanceof Collection) {
-                    $list = array_merge($list, $value->to_array());
+                    $list = array_merge($list, $value->toArray());
                 } else {
                     $list[] = $value;
                 }
@@ -34,7 +34,7 @@ class Collection extends Common\Collection
             $value = $item->$name($arguments);
             if ($item instanceof Model) {
                 if ($value instanceof Collection) {
-                    $list = array_merge($list, $value->to_array());
+                    $list = array_merge($list, $value->toArray());
                 } else {
                     $list[] = $value;
                 }
@@ -48,7 +48,7 @@ class Collection extends Common\Collection
     public function __construct($array = null)
     {
         if (is_null($array)) $array = array();
-        if ($array instanceof Collection) $array = $array->to_array();
+        if ($array instanceof Collection) $array = $array->toArray();
         if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection::__construct() expects an array - ' . gettype($array) . ' given');
         
         $this->container = $array;
@@ -97,7 +97,7 @@ class Collection extends Common\Collection
     
     public function add($array)
     {
-        if ($array instanceof Collection) $array = $array->to_array();
+        if ($array instanceof Collection) $array = $array->toArray();
         if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection->add() expects an array');
         
         $this->container = array_values(array_merge($this->container, $array));
