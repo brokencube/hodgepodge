@@ -90,7 +90,7 @@ class Env
     protected function __construct() 
     {
         $this->site_mode = $_SERVER['PARAM1'] == 'live' ? 'live' : 'development';
-        $this->secure = ($_SERVER['HTTPS'] == 'on');
+        $this->secure = ($_SERVER['HTTPS'] == 'on' or $_SERVER['HTTP_X_FORWARDED_PORT'] == '443');
         
         preg_match('#[-_/]([^-_/]+?)(/webroot)?/?$#', $_SERVER['DOCUMENT_ROOT'], $matches);
         $this->revision = $matches[1];

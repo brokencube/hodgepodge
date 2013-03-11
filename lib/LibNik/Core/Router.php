@@ -77,13 +77,14 @@ class Router
     
     public function secure($be_secure = true)
     {
+        $env = Env::get();
         // Force https
-        if ($be_secure and $_SERVER['HTTPS'] != 'on') {
+        if ($be_secure and !$env->secure()) {
             static::redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
         }
         
         // Force http
-        if (!$be_secure and $_SERVER['HTTPS'] == 'on') {
+        if (!$be_secure and $env->secure()) {
             static::redirect('http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
         }        
     }
