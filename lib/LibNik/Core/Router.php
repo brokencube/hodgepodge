@@ -51,6 +51,14 @@ class Router
         return static::$filename;
     }
     
+    // [FIXME] Is this really the best way to do this... feels slightly dirty?
+    public static function reroute()
+    {
+        $old_filename = substr(static::$filename, 0, -4); // Remove .php from end;
+        $next_part = array_shift(static::$args);
+        return static::$filename = $old_filename . '/' . $next_part . '.php';
+    }
+    
     public static function args()
     {
         if (!isset(static::$path)) static::route();
