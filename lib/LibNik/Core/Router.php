@@ -15,6 +15,7 @@ class Router
     public static function route($routepath = null)
     {
         static::$path = $routepath ?: $_REQUEST['routepath'];
+        static::$path = str_replace(chr(0), '', static::$path); // Protect against poison null byte attacks
         
         // Regex the path to extract information
         /* Examples:
