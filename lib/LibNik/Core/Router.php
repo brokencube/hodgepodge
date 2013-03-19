@@ -56,7 +56,7 @@ class Router
     public static function reroute()
     {
         $old_filename = substr(static::$filename, 0, -4); // Remove .php from end;
-        $next_part = array_shift(static::$args);
+        $next_part = array_shift(static::$args) ?: static::$default;
         return static::$filename = $old_filename . '/' . $next_part . '.php';
     }
     

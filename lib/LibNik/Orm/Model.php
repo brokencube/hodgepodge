@@ -25,8 +25,6 @@ class Model implements \JsonSerializable
 {
     public static $dbconnection = 'default'; // Override database connection associated with this class - for subclasses
     public static $tablename;                // Override table associated with this class - for subclasses
-    public static $schema;                   // Database schema, as read in by Model::generate_schema();
-    public static $namespace;                // List of namespaces for schemas. Should really be merged into $schema in future!
     protected static $instance;              // An internal store of already created objects so that objects for each row only get created once
     
     /* PUBLIC CONSTRUCTION METHODS */
@@ -298,104 +296,5 @@ class Model implements \JsonSerializable
     {
         $this->cache = $bool;
         return $this;
-    }
-    
-    ////////////////////////////////////
-    /* Reverse engineer a database to calculate links between tables */
-    public static function generateSchema($dbconnection = null, $namespace = 'models', $override_cache = false)
-    {
-        if (!$dbconnection) $dbconnection = 'default';
-        
-        Core\Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
-        $cache = new Core\Cache('model', 'model_' . $dbconnection);
-        
-        if ($override_cache or !$model = $cache()) {
-            // Get a list of all foreign keys in this database
-            list($keys, $schema) = Core\Query::run("
-                SELECT b.table_name, b.column_name, b.referenced_table_name, b.referenced_column_name
-                FROM information_schema.table_constraints a 
-                JOIN information_schema.key_column_usage b
-                ON a.table_schema = b.table_schema AND a.constraint_name = b.constraint_name
-                WHERE a.table_schema = database() AND a.constraint_type = 'FOREIGN KEY'
-                ORDER BY b.table_name, b.constraint_name;
-                
-                SELECT table_name, column_name, data_type FROM information_schema.columns where table_schema = database();
-            ", $dbconnection);
-            
-            // Assemble list of table columns by table
-            foreach ($schema as $row) {
-                // All tables default to type 'table' - can also be 'pivot' or 'foreign' as detected later
-                $model[$row['table_name']]['type'] = 'table';
-                // List all columns for this table
-                $model[$row['table_name']]['columns'][$row['column_name']] = $row['data_type'];
-            }
-            
-            // Loop over every foreign key definition
-            foreach ($keys as $row) {
-                if ($row['referenced_column_name'] == 'id' and $row['column_name'] == 'id') {
-                    // If both columns in the key are 'id' then this is a 1 to 1 relationship.
-                    // Create a link in both objects to each other
-                    $model[$row['referenced_table_name']]['one-to-one'][$row['table_name']] = $row['table_name'];
-                    $model[$row['table_name']]['one-to-one'][$row['referenced_table_name']] = $row['referenced_table_name'];
-                    $model[$row['table_name']]['type'] = 'foreign';
-                } elseif ($row['referenced_column_name'] == 'id') {
-                    // if this foreign key points at one 'id' column then this is a usable foreign 'key'
-                    if (substr($row['column_name'], -3) == '_id') {
-                        $model[$row['table_name']]['many-to-one'][substr($row['column_name'], 0, -3)] = $row['referenced_table_name'];
-                        
-                        // Add the key constraint in reverse, trying to make a sensible name.
-                        if (substr($row['column_name'], 0, -3) == $row['referenced_table_name']) {
-                            $property_name = $row['table_name'];
-                        } else {
-                            $property_name = $row['table_name'] . '_' . substr($row['column_name'], 0, -3);
-                        }
-                        $model[$row['referenced_table_name']]['one-to-many'][$property_name] = array('table' => $row['table_name'], 'column_name' => $row['column_name']);
-                    }
-                }
-            }
-            
-            // Now look for pivot tables 
-            foreach ($model as $pivotname => $pivot) {
-                // If we have found a table with only 2 columns which are both foreign keys then this must be a pivot table
-                if (count($pivot['many-to-one']) == 2 and count($pivot['columns']) == 2) {
-                    // Grab both foreign keys and rearrange them into two arrays.
-                    $table = array();
-                    foreach($pivot['many-to-one'] as $column => $tablename) {
-                        $table[] = array('column' => $column . '_id', 'table' => $tablename);
-                    }
-                    
-                    // For each foreign key, store details in the table it point to on how to get to the OTHER table in the "Many to Many" relationship
-                    $model[ $table[0]['table'] ][ 'many-to-many' ][ $pivotname ] = array(
-                        'pivot' => $pivotname,
-                        'column' => $table[1]['column'] ,
-                        'table' => $table[1]['table'],
-                        'id' => $table[0]['column'],
-                    );
-                    
-                    $model[ $table[1]['table'] ][ 'many-to-many' ][ $pivotname ] = array(
-                        'pivot' => $pivotname,
-                        'column' => $table[0]['column'],
-                        'table' => $table[0]['table'],
-                        'id' => $table[1]['column'],
-                    );
-                    
-                    $model[$pivotname]['type'] = 'pivot';
-                    
-                    // Remove the M-1 keys for this table to encapsulate the M-M scheme.
-                    foreach((array) $model[ $table[0]['table'] ][ 'one-to-many' ] as $key => $val) {
-                        if ($val['table'] == $pivotname) unset ($model[ $table[0]['table'] ][ 'one-to-many' ][$key]);
-                    }
-                    
-                    foreach((array) $model[ $table[1]['table'] ][ 'one-to-many' ] as $key => $val) {
-                        if ($val['table'] == $pivotname) unset ($model[ $table[1]['table'] ][ 'one-to-many' ][$key]);
-                    }
-                }
-            }
-            
-            $cache($model);
-        }
-        
-        Model::$namespace[$dbconnection] = $namespace;
-        return Model::$schema[$dbconnection] = $model;
     }
 }
