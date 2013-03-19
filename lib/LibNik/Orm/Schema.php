@@ -98,15 +98,17 @@ class Schema {
                         $table[] = array('column' => $column . '_id', 'table' => $tablename);
                     }
                     
+                    $property_name = Schema::underscoreCase($pivotname);
+                    
                     // For each foreign key, store details in the table it point to on how to get to the OTHER table in the "Many to Many" relationship
-                    $model[ $table[0]['table'] ][ 'many-to-many' ][ $pivotname ] = array(
+                    $model[ $table[0]['table'] ][ 'many-to-many' ][ $property_name ] = array(
                         'pivot' => $pivotname,
                         'column' => $table[1]['column'],
                         'table' => $table[1]['table'],
                         'id' => $table[0]['column'],
                     );
                     
-                    $model[ $table[1]['table'] ][ 'many-to-many' ][ $pivotname ] = array(
+                    $model[ $table[1]['table'] ][ 'many-to-many' ][ $property_name ] = array(
                         'pivot' => $pivotname,
                         'column' => $table[0]['column'],
                         'table' => $table[0]['table'],
