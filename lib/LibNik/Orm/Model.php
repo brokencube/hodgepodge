@@ -49,7 +49,6 @@ class Model implements \JsonSerializable
     
     /* FACTORY METHODS */    
     // Build an appropriate Model object based on id and class/table name
-    // Special case: $limit = -1 :: return the first object without collection wrapper.
     final public static function factory($where, $class_or_table_name = null, $database = null, Core\QueryOptions $options = null, $single_result = false)
     {
         // Determine which db connection to use
@@ -57,7 +56,7 @@ class Model implements \JsonSerializable
                 
         // Figure out the base class and table we need based on current context
         $schema = Schema::get($database);
-        list($base_class, $table) = $schema->guessContext(get_called_class());
+        list($base_class, $table) = $schema->guessContext($class_or_table_name ?: get_called_class());
         
         // Get data from database        
         $data = Model::factoryData($where, $table, $database, $options);
