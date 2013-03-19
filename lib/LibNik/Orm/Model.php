@@ -51,9 +51,9 @@ class Model implements \JsonSerializable
     // Build an appropriate Model object based on id and class/table name
     final public static function factory($where, $class_or_table_name = null, $database = null, Core\QueryOptions $options = null, $single_result = false)
     {
-        // Determine which db connection to use
+        // Some defaults
         if (!$database) $database = static::$dbconnection;
-                
+        
         // Figure out the base class and table we need based on current context
         $schema = Schema::get($database);
         list($base_class, $table) = $schema->guessContext($class_or_table_name ?: get_called_class());
@@ -105,7 +105,7 @@ class Model implements \JsonSerializable
         if (!is_numeric($id)) return null;
         if (!$database) $database = static::$dbconnection;
         $schema = Schema::get($database);
-        list($class, $table) = $schema->guessContext($class_or_table);
+        list($class, $table) = $schema->guessContext($class_or_table ?: get_called_class());
         
         if (!$force_refresh) {
             // Check Model object cache
