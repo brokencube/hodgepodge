@@ -22,6 +22,7 @@ class Schema {
     protected $model;
     protected $database;
     protected $namespace;
+    
     protected function __construct($model, $database, $namespace) {
         $this->model = $model;
         $this->database = $database;
@@ -125,7 +126,7 @@ class Schema {
                 }
             }
             
-            $obj = new static($model, $database, $namespace);
+            $obj = new static($model, $dbconnection, $namespace);
             $cache($obj);
         }
         
