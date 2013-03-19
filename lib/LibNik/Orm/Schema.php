@@ -3,6 +3,8 @@
 namespace LibNik\Orm;
 
 use LibNik\Exception;
+use LibNik\Core\Query;
+use LibNik\Core\Cache;
 
 class Schema {
     
@@ -26,11 +28,11 @@ class Schema {
     
     public static function generate($dbconnection = 'default', $namespace = 'models', $cachebust = false)
     {
-        Core\Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
-        $cache = new Core\Cache('model', 'model_' . $dbconnection);
+        Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
+        $cache = new Cache('model', 'model_' . $dbconnection);
         if ($cachebust or !$obj = $cache()) {
             // Get a list of all foreign keys in this database
-            $query = new Core\Query($dbconnection);
+            $query = new Query($dbconnection);
             $query->sql("
                 SELECT b.table_name, b.column_name, b.referenced_table_name, b.referenced_column_name
                 FROM information_schema.table_constraints a 
