@@ -149,10 +149,15 @@ class Schema {
         return str_replace(' ', '_', self::normaliseCase($string));
     }
     
-    // Based on supplied data, and the current class, figure out what class + db table we should be contructing.
-    public function getFactoryContext($class_or_table)
-    {        
-        // Use the supplied table/class name, or fall back to the name of the current class
+    // Based on supplied data, try and guess the appropriate class and tablename
+    public function guessContext($class_or_table)
+    {
+        // Namespace classname? Remove that namespace before continuing
+        if (strrpos($class_or_table, '\\') !== false) {
+            $class_or_table = substr($class_or_table, strrpos($class_or_table, '\\') + 1);
+        }
+        
+        // Normalise the (namespace stripped) class or table name so we don't have to worry about under_score or CamelCase
         $normalised = self::normaliseCase($class_or_table);
         
         // First guesses as to table and class names

@@ -57,7 +57,7 @@ class Model implements \JsonSerializable
                 
         // Figure out the base class and table we need based on current context
         $schema = Schema::get($database);
-        list($base_class, $table) = $schema->getFactoryContext(get_called_class());
+        list($base_class, $table) = $schema->guessContext(get_called_class());
         
         // Get data from database        
         $data = Model::factoryData($where, $table, $database, $options);
@@ -106,7 +106,7 @@ class Model implements \JsonSerializable
         if (!is_numeric($id)) return null;
         if (!$database) $database = static::$dbconnection;
         $schema = Schema::get($database);
-        list($class, $table) = $schema->getFactoryContext($class_or_table);
+        list($class, $table) = $schema->guessContext($class_or_table);
         
         if (!$force_refresh) {
             // Check Model object cache
@@ -136,7 +136,7 @@ class Model implements \JsonSerializable
     {
         // Get the schema for the current class/table
         $schema = Schema::get(static::$dbconnection);
-        list($class, $table) = $schema->getFactoryContext(get_called_class());
+        list($class, $table) = $schema->guessContext(get_called_class());
         
         // Make a new blank data object
         $model_data = new Data(array(), $table, $schema, false, true);
