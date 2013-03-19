@@ -54,9 +54,10 @@ class Model implements \JsonSerializable
     {
         // Determine which db connection to use
         if (!$database) $database = static::$dbconnection;
-        
+                
         // Figure out the base class and table we need based on current context
-        list($base_class, $table) = static::getFactoryContext($class_or_table_name, $database);
+        $schema = Schema::get($database);
+        list($base_class, $table) = $schema->getFactoryContext(get_called_class());
         
         // Get data from database        
         $data = Model::factoryData($where, $table, $database, $options);
@@ -69,7 +70,7 @@ class Model implements \JsonSerializable
         
         foreach($data as $row) {
             // Database data object unique to this object
-            $data_obj = new Data($row, $table, $database);
+            $data_obj = new Data($row, $table, $schema);
             
             // Ask the base_class if there is a subclass we should be using.
             $class = call_user_func(array($base_class, '_subclass'), $data_obj);
@@ -104,10 +105,11 @@ class Model implements \JsonSerializable
         // Invalid id? No object :P
         if (!is_numeric($id)) return null;
         if (!$database) $database = static::$dbconnection;
+        $schema = Schema::get($database);
+        list($class, $table) = $schema->getFactoryContext($class_or_table);
         
         if (!$force_refresh) {
             // Check Model object cache
-            list($class, $table) = static::getFactoryContext($class_or_table, $database);        
             if (isset(Model::$instance[$database][$table][$id])) {
                 return Model::$instance[$database][$table][$id];
             }
@@ -120,66 +122,28 @@ class Model implements \JsonSerializable
     
     // Get data from database from which we can construct Model objects
     final protected static function factoryData($where, $table, $database, Core\QueryOptions $options = null)
-    {        
-        // Check we have an appropriate schema for this table
-        if (!$model = Model::$schema[$database][$table]) throw new Exception\Model('NO_SCHEMA', array($database, $where, $table));
-        
+    {
         // Select * from $table where $where
         $query = new Core\Query($database);
         list($data) = $query->select($table, $where, $options)->execute();
                 
         return $data;
     }
-    
-    // Based on supplied data, and the current class, figure out what class + db table we should be contructing.
-    final protected static function getFactoryContext($class_or_table, $database)
-    {
-        // Retrieve the model namespace for the database we are using
-        $namespace = Model::$namespace[$database];
         
-        // Use the supplied table/class name, or fall back to the name of the current class
-        $class_or_table = strtolower($class_or_table ?: get_called_class());
-        
-        // Guess the table name -- $class_or_table will either be:
-        // A) The table name (use as is)
-        // B) The (global) class name (assume class is named same as table)
-        // or C) The namespaced class name (strip namespace and use as above)
-        if (strrpos($class_or_table, '\\') !== false) {
-            $table = strtolower(substr($class_or_table, strrpos($class_or_table, '\\') + 1));
-        } else {
-            $table = strtolower($class_or_table);
-        }
-        
-        // Use the stripped table name + namespace to guess a classname.
-        // Table names are lowercase+underscores, Classnames are camelcase
-        $class = $namespace . '\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $table)));
-        
-        // If the guessed classname exists, then we are making one of those objects.
-        if (class_exists($class)) {
-            // Does this class have a different table, otherwise base it on the class name
-            $return = array($class, $class::$tablename ?: $table);
-        } else {
-            // We didn't find an appropriate class - make a Model object using the guessed Table name.
-            $return = array('LibNik\\Orm\\Model', $table);
-        }
-        
-        return $return;
-    }
-    
     // Return an empty Model_Data object for this class/table so that a new object can be constructed (and a new row entered in the table).
     // For 'foreign' tables, a parent object must be supplied.
     public static function newData(Model $parent_object = null)
     {
         // Get the schema for the current class/table
-        $database = static::$dbconnection;
-        list($class, $table) = static::getFactoryContext(null, $database);
-        if (!Model::$schema[$database][$table]) throw new Exception\Model('NO_SCHEMA', array($database, $class, $table, static::$tablename));
+        $schema = Schema::get(static::$dbconnection);
+        list($class, $table) = $schema->getFactoryContext(get_called_class());
         
         // Make a new blank data object
-        $model_data = new Data(array(), $table, $database, false, true);
+        $model_data = new Data(array(), $table, $schema, false, true);
         
+        $table_schema = $schema->getTable($table);
         // "Foreign" tables use a "parent" table for their primary key. We need that parent object for it's id.
-        if (Model::$schema[$database][$table]['type'] == 'foreign') {
+        if ($table_schema['type'] == 'foreign') {
             if (!$parent_object) throw new Exception\Model('NO_PARENT_OBJECT', array($database, $class, $table, static::$tablename));
             $model_data->id = $parent_object->id;
         }
@@ -196,7 +160,6 @@ class Model implements \JsonSerializable
     protected $_data;     // Container for the Model_Data object for this row. Used for both internal and external __get access.
     protected $database;  // Name of db connection relating to this object - useful for extending these objects.
     protected $table;     // Name of db table relating to this object - useful for extending these objects.
-    protected $model;     // Reference to the Model::$schema[$table] array for this object's table
     protected $cache;     // Retain $_db the next time this item is serialised.
     
     // This is a replacement constructor that is called after the model object has been placed in the instance cache.
@@ -212,9 +175,6 @@ class Model implements \JsonSerializable
         $this->id = $data->id;
         $this->table = $data->getTable();
         $this->database = $data->getDatabase();
-        
-        // &reference so that we don't accidentally _copy_ this data into each object    
-        $this->model = &Model::$schema[$this->database][$this->table];        
     }
     
     // [FIXME] Is it actually safe to return ids for all objects, or do we want to even obfuscate this?
@@ -231,13 +191,9 @@ class Model implements \JsonSerializable
             list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database); 
             
             // Database data object unique to this object
-            $this->_data = new Data($data, $this->table, $this->database);            
+            $this->_data = new Data($data, $this->table, Schema::get($this->database));
         }
-        
-        // &reference so that we don't accidentally _copy_ this data into each object
-        // [Note] PHP should handle this automatically - perhaps I am being unjustifiably cautious...
-        $this->model = &Model::$schema[$this->database][$this->table];
-        
+                
         // Store the object in the object cache
         Model::$instance[$this->database][$this->table][strtolower(get_called_class())][$this->id] = $this;
         

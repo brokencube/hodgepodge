@@ -20,9 +20,11 @@ class Schema {
     }
     
     protected $model;
+    protected $database;
     protected $namespace;
-    protected function __construct($model, $namespace) {
+    protected function __construct($model, $database, $namespace) {
         $this->model = $model;
+        $this->database = $database;
         $this->namespace = $namespace;
     }
     
@@ -123,7 +125,7 @@ class Schema {
                 }
             }
             
-            $obj = new static($model, $namespace);
+            $obj = new static($model, $database, $namespace);
             $cache($obj);
         }
         
@@ -138,11 +140,54 @@ class Schema {
     
     public static function camelCase($string)
     {
-        return str_replace(' ', '', ucwords($string));
+        return str_replace(' ', '', ucwords(self::normaliseCase($string)));
     }
     
     public static function underscoreCase($string)
     {
-        return str_replace(' ', '_', $string);
+        return str_replace(' ', '_', self::normaliseCase($string));
+    }
+    
+    // Based on supplied data, and the current class, figure out what class + db table we should be contructing.
+    public function getFactoryContext($class_or_table)
+    {        
+        // Use the supplied table/class name, or fall back to the name of the current class
+        $normalised = self::normaliseCase($class_or_table);
+        
+        // First guesses as to table and class names
+        $class = $this->namespace . '\\' . self::camelCase($normalised);
+        $table = $this->model[$normalised] ? $this->model[$normalised]['table_name'] : '';
+        
+        // If the guessed classname exists, then we are making one of those objects.
+        if (class_exists($class)) {
+            // Does this class have a different table, otherwise use guess from above.
+            if ($class::$tablename) {
+                $normalised_table = self::normaliseCase($class::$tablename);
+                $table = $this->model[$normalised] ? $this->model[$normalised]['table_name'] : '';
+            }
+            $table = $class::$tablename ?: $table;
+        } else {
+            // We didn't find an appropriate class - make a Model object using the guessed table name.
+            $class = 'LibNik\\Orm\\Model';
+        }
+        
+        // We haven't found an entry in the schema for our best guess table name? Boom!
+        if (!$table) {
+            throw new Exception\Model('NO_SCHEMA', array($class_or_table, $normalised, $class, $table));
+        }
+                
+        return array($class, $table);
+    }
+    
+    public function getTable($table)
+    {
+        $normalised = self::normaliseCase($table);
+        
+        return $this->model[$normalised];
+    }
+
+    public function __get($var)
+    {
+        return $this->$var;
     }
 }

@@ -10,16 +10,18 @@ class Data
     protected $data = array();     // Data from columns on this table
     protected $external = array(); // Links to foreign key objects
     protected $database;           // Database this data is associated with
+    protected $schema;             // Schema object for this database
     protected $table;              // Class this data is associated with
-    protected $model;              // Reference to &Model::$schema for this $table
+    protected $model;              // Fragment of Schema object for this table
     protected $locked = true;      // Can we use __set() - for updates/inserts
     protected $new = false;        // Is this to be a new row? (used with Model::new_db())
     
-    public function __construct(array $data, $table, $database, $locked = true, $new = false)
+    public function __construct(array $data, $table, Schema $schema, $locked = true, $new = false)
     {
-        $this->database = $database;
+        $this->database = $schema->database;
         $this->table = $table;
-        $this->model = &Model::$schema[$database][$table];
+        $this->schema = $schema;
+        $this->model = $schema->getTable($table);
         $this->locked = $locked;
         $this->new = $new;
         
@@ -104,7 +106,10 @@ class Data
             $pivot = $this->model['many-to-many'][$var];
             
             // Get a list of ids linked to this object (i.e. the tablename_id stored in the pivot table)
-            list($raw) = Core\Query::run("Select `{$pivot['column']}` as id from `{$pivot['pivot']}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
+            $pivot_schema = $this->schema->getTable($pivot['pivot']);
+            $pivot_tablename = $pivot_schema['table_name'];
+            
+            list($raw) = Core\Query::run("Select `{$pivot['column']}` as id from `{$pivot_tablename}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
             
             // Rearrange the list of ids into a flat array
             foreach($raw as $raw_id) $id[] = $raw_id['id'];
