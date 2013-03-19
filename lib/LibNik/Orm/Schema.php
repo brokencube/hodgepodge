@@ -12,11 +12,11 @@ class Schema {
     
     public static function get($dbconnection)
     {
-        if (!$object_list[$dbconnection]) {
+        if (!static::$object_list[$dbconnection]) {
             throw new Exception\Model('NO_GENERATED_SCHEMA', $dbconnection);
         }
         
-        return $object_list[$dbconnection];
+        return static::$object_list[$dbconnection];
     }
     
     protected $model;
