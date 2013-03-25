@@ -28,7 +28,7 @@ class Data
         // Pull in data from $data
         foreach($data as $key => $value) {
             // Make a special object for dates
-            if($this->model['columns'][$key] == 'datetime') {
+            if($this->model['columns'][$key] == 'datetime' and !is_null($value)) {
                 $this->data[$key] = new Time($value, new \DateTimeZone('UTC'));
             } else {
                 $this->data[$key] = $value;
