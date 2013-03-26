@@ -11,7 +11,7 @@ class Validation
     
     public function __sleep()
     {
-        return ['source'];
+        return array('source');
     }
     
     public function __wakeup() {}
@@ -23,6 +23,11 @@ class Validation
         } else {
             $this->source = $source;
         }
+    }
+    
+    public function mergeData(array $array)
+    {
+        $this->source += $array;
     }
     
     public function __get($var)
