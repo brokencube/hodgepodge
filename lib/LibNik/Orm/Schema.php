@@ -171,9 +171,8 @@ class Schema {
             // Does this class have a different table, otherwise use guess from above.
             if ($class::$tablename) {
                 $normalised_table = self::normaliseCase($class::$tablename);
-                $table = $this->model[$normalised] ? $this->model[$normalised]['table_name'] : '';
+                $table = $this->model[$normalised_table] ? $this->model[$normalised_table]['table_name'] : '';
             }
-            $table = $class::$tablename ?: $table;
         } else {
             // We didn't find an appropriate class - make a Model object using the guessed table name.
             $class = 'LibNik\\Orm\\Model';
