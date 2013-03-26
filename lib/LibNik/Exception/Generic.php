@@ -3,12 +3,10 @@ namespace LibNik\Exception;
 
 class Generic extends \RuntimeException
 {
-	protected static $label_messages = array();
-
 	protected $label;   // A codeword for easy exception recognition
 	protected $data;    // Any data associated with the exception (e.g parameters that caused the exception)
 
-	public function __construct($label = 'UNKNOWN', $message = null, $data = null, \Exception $previous_exception = null)
+	public function __construct($label = 'LABEL_NOT_SET', $message = null, $data = null, \Exception $previous_exception = null)
 	{
 		$this->label = $label;
 		
@@ -25,4 +23,9 @@ class Generic extends \RuntimeException
 	{
 		return $this->label;
 	}
+    
+    public function __toString()
+    {
+        return $this->label . ': [' . $this->message . ']';
+    }
 }

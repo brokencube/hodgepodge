@@ -22,7 +22,7 @@ class Scribe
     
     public static function page($template, $data = array())
     {
-        if (!$template) throw new Exception\Generic(0, 'No template given');
+        if (!$template) throw new Exception\Generic('NO_TEMPLATE', 'No template given');
         
         $tpl = new static::$engine;
         $env = Env::get();
@@ -40,24 +40,10 @@ class Scribe
         $tpl->assign(static::$extras);
         $tpl->assign('path', Router::path());
         $tpl->assign('env', $env);
-        $tpl->assign('display',	self::$display);
+        $tpl->assign('display',	static::$display);
         $tpl->assign('data', $data);
         
         echo $tpl->render($template);
-    }
-
-    public static function HTTP_404()
-    {
-        header("HTTP/1.0 404 Not Found");
-        self::page('standard/404');
-        exit;
-    }
-
-    public static function maintenence()
-    {
-        header("HTTP/1.1 503 Service Unavailable");
-        self::page('standard/maintenence');
-        exit;
     }
 
     ///////////////////////
