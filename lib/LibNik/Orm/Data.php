@@ -245,27 +245,23 @@ class Data
             $query->sql("SELECT ".$this->data['id']." into @id");        
         }
         
-        // Many-to-many tables
+        $origin_id = new Common\SqlString('@id');
+        
+        // Foreign tables
         foreach ($this->external as $table => $value) {
-            // Many-to-one keys have already been handled by the _id columns native to the table. Skip.
-            if (key_exists($table, (array) $this->model['many-to-one'])) continue;
-            
-            // One-to-Many keys cannot be updated from this end of the relationship. Skip.
-            if (key_exists($table, (array) $this->model['one-to-many'])) continue;
-                    
-            // Get the description of this M-M relationship
-            $p = $this->model['many-to-many'][$table];
+            // Skip property if this isn't an M-M table (M-1 and 1-M tables are dealt with in other ways)
+            if (!$pivot = $this->model['many-to-many'][$table]) continue;
             
             // Clear out any existing data for this object - this is safe because we are in an atomic transaction.
-            $query->sql("Delete from {$p['pivot']} where {$p['id']} = @id");
+            $query->sql("Delete from $table where {$pivot['id']} = @id");
             
             // Loops through the list of objects to link to this table
             foreach ($value as $object) {                    
                 $query->insert(
-                    $p['pivot'],                                     // Pivot table
+                    $table,                              // Pivot table
                     array(
-                        $p['id'] => new Common\SqlString('@id'),     // Id of this object
-                        $p['column'] => $object->id                  // Id of object linked to this object
+                        $pivot['id'] => $origin_id,      // Id of this object
+                        $pivot['column'] => $object->id  // Id of object linked to this object
                     )
                 );
             }
