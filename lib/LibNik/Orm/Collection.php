@@ -121,7 +121,26 @@ class Collection extends Common\Collection
                         unset($this->container[$item_key]);
                         break 2;
                     }
-                }    
+               }    
+            }
+        }
+        
+        $this->container = array_values($this->container);
+        
+        return $this;
+    }
+
+    public function filter($where_array)
+    {
+        foreach ($this->container as $item_key => $item) {
+            foreach ($where_array as $property => $value_list) {
+                if (!is_array($value_list)) $value_list = array($value_list);
+                foreach ($value_list as $value) {
+                    if ($item->$property != $value) {
+                        unset($this->container[$item_key]);
+                        break 2;
+                    }
+               }    
             }
         }
         
