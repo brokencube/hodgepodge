@@ -1,7 +1,7 @@
 <?php
 namespace LibNik\Exception\HTTP;
 
-class NotFound extends LibNik\Exception\HTTP
+class NotFound extends \LibNik\Exception\HTTP
 {
     protected $header = 'HTTP/1.0 404 Not Found';
 	public function __construct($message = null, $data = null, \Exception $previous_exception = null)
