@@ -13,8 +13,8 @@
         }    
     ],
     "suggest": {
-        "rain/raintpl": "Default template engine for LibNik/Core/Scribe"
-        "smarty/smarty": "Alternate template engine for LibNik/Core/Scribe",
+        "rain/raintpl": "Default template engine for LibNik/Core/Scribe",
+        "smarty/smarty": "Alternate template engine for LibNik/Core/Scribe"
     },
     "autoload": {    
       "psr-0": { "LibNik": "lib" }
