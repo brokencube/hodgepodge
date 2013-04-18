@@ -23,6 +23,11 @@ class Database
         foreach($dbs as $name => $db) self::register($db, $name);
     }
 
+    public static function details($name)
+    {
+        return self::$details[$name];
+    }
+    
     public static function autoconnect($name = 'default')
     {
         global $config;

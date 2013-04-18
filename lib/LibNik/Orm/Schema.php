@@ -32,7 +32,10 @@ class Schema {
     public static function generate($dbconnection = 'default', $namespace = 'models', $cachebust = false)
     {
         Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
-        $cache = new Cache('model', 'schema_' . $dbconnection);
+
+        $db = Database::details($dbconnection);
+        $cache = new Cache('model', 'schema_' . md5($dbconnection . $namespace . $db['database']));
+
         if ($cachebust or !$obj = $cache()) {
             // Get a list of all foreign keys in this database
             $query = new Query($dbconnection);
