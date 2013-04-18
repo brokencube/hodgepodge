@@ -94,7 +94,7 @@ class Query
     
     /////////////////
     
-    public function execute($add_transaction = false)
+    public function execute($transaction = false)
     {
         // We are only allowed to execute each Query object once!
         if ($this->lock) throw new Exception\Database('QUERY_LOCKED', "This query has already been executed", $this);
@@ -103,73 +103,61 @@ class Query
         // Start timing query
         $total_time = microtime(true);
         
-        // Wrap the queries in a transaction block.
-        if ($add_transaction) {
-            array_unshift($this->sql, 'START TRANSACTION;');
-            array_push($this->sql, 'COMMIT;');
-        }
+        // Set transaction mode
+        $this->mysql->autocommit(!$transaction);
                 
         $count = 0;
         foreach($this->sql as $query) {
             // Do the database query
-            if ($this->mysql->multi_query($query)) {
-                do {
-                    $return[$count] = array();
-                    
-                    // If we have a result set, collated it into an array of rows
-                    if ($result = $this->mysql->store_result()) {
-                        while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                            $return[$count][] = $row;
-                        }
-                        
-                        // We don't need that funky result resource anymore...
-                        $result->close();
+            if ($this->mysql->real_query($query)) {
+                $return[$count] = array();
+                
+                // If we have a result set, collated it into an array of rows
+                if ($result = $this->mysql->store_result()) {
+                    while($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                        $return[$count][] = $row;
                     }
                     
-                    // Store some useful data about this set of results
-                    $this->debug['insert_id'][$count] = $this->mysql->insert_id;
-                    $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
-                    $count++;
-                    
-                } while($this->mysql->next_result());
+                    // We don't need that funky result resource anymore...
+                    $result->close();
+                }
+                
+                // Store some useful data about this set of results
+                $this->debug['insert_id'][$count] = $this->mysql->insert_id;
+                $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
+            
+                // Check for any warning from the last statement
+                if ($this->mysql->warning_count) {
+                    $e = $this->mysql->get_warnings();
+                    do {
+                        $this->debug['warnings'][$count][] = "{$e->errno}: {$e->message}\n";
+                    } while ($e->next());
+                }
+                
+                // Check for any errors from the last statement
+                if ($this->mysql->error) {
+                    $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
+                }
+                
+                $count++;
             }            
         }
         
         // Stop timing query
         $this->debug['total_time'] = microtime(true) - $total_time;
         $this->debug['count'] = $count;
-        
-        if ($this->mysql->warning_count) {
-            $e = $this->mysql->get_warnings();
-            do {
-                $this->debug['warnings'][] = "{$e->errno}: {$e->message}\n";
-            } while ($e->next());
-        }
-        
-        if ($this->mysql->error) {
-            $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
-        }
-        
+
         // Log the query with Log::
         Log::get()->logQuery($this);
-        
-        // If we had an error and are using exceptions, throw one.
+
+        // If we had an error, throw and exception.
         if ($this->debug['error']) {
+            if ($transaction) $this->mysql->rollback();
             throw new Exception\Query($this);
         }
         
-        // If we wrapped this query in a transaction, remove the debug data about those statements.
-        if ($add_transaction) {
-            // Remove blank entries for START TRANSACTION; and COMMIT;
-            array_shift($return);
-            array_shift($this->debug['insert_id']);
-            array_shift($this->debug['affected_rows']);
-            
-            array_pop($return);
-            array_pop($this->debug['insert_id']);
-            array_pop($this->debug['affected_rows']);
-        }
-        
+        if ($transaction) $this->mysql->commit();
+                
         // Finally, return the results of the query
         return $return;
     }
