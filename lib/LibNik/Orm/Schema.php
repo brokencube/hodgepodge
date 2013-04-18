@@ -5,6 +5,7 @@ namespace LibNik\Orm;
 use LibNik\Exception;
 use LibNik\Core\Query;
 use LibNik\Core\Cache;
+use LibNik\Core\Database;
 
 class Schema {
     
