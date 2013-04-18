@@ -109,38 +109,37 @@ class Query
         $count = 0;
         foreach($this->sql as $query) {
             // Do the database query
-            if ($this->mysql->real_query($query)) {
-                $return[$count] = array();
-                
-                // If we have a result set, collated it into an array of rows
-                if ($result = $this->mysql->store_result()) {
-                    while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                        $return[$count][] = $row;
-                    }
-                    
-                    // We don't need that funky result resource anymore...
-                    $result->close();
-                }
-                
-                // Store some useful data about this set of results
-                $this->debug['insert_id'][$count] = $this->mysql->insert_id;
-                $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
+            $this->mysql->real_query($query);
+            $return[$count] = array();
             
-                // Check for any warning from the last statement
-                if ($this->mysql->warning_count) {
-                    $e = $this->mysql->get_warnings();
-                    do {
-                        $this->debug['warnings'][$count][] = "{$e->errno}: {$e->message}\n";
-                    } while ($e->next());
+            // If we have a result set, collated it into an array of rows
+            if ($result = $this->mysql->store_result()) {
+                while($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                    $return[$count][] = $row;
                 }
                 
-                // Check for any errors from the last statement
-                if ($this->mysql->error) {
-                    $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
-                }
-                
-                $count++;
-            }            
+                // We don't need that funky result resource anymore...
+                $result->close();
+            }
+            
+            // Store some useful data about this set of results
+            $this->debug['insert_id'][$count] = $this->mysql->insert_id;
+            $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
+        
+            // Check for any warning from the last statement
+            if ($this->mysql->warning_count) {
+                $e = $this->mysql->get_warnings();
+                do {
+                    $this->debug['warnings'][$count][] = "{$e->errno}: {$e->message}\n";
+                } while ($e->next());
+            }
+            
+            // Check for any errors from the last statement
+            if ($this->mysql->error) {
+                $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
+            }
+            
+            $count++;
         }
         
         // Stop timing query
