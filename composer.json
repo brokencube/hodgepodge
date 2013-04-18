@@ -12,9 +12,9 @@
             "role": "Lead Developer"
         }    
     ],
-    "require": {
-        "smarty/smarty": "3.1.*",
-        "rain/raintpl": "dev-master"
+    "suggest": {
+        "rain/raintpl": "Default template engine for LibNik/Core/Scribe",
+        "smarty/smarty": "Alternate template engine for LibNik/Core/Scribe"
     },
     "autoload": {    
       "psr-0": { "LibNik": "lib" }
