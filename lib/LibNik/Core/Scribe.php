@@ -20,47 +20,40 @@ class Scribe
     
     public static $engine = Scribe::ENGINE_SMARTY;
     
-    public static function page($template, $data = array())
+    public static function render($template, $data = array())
     {
         if (!$template) throw new Exception\Generic('NO_TEMPLATE', 'No template given');
         
         $tpl = new static::$engine;
-        $env = Env::get();
-        
-        /* Mobile templates */
-        if ($env->mobileBrowser())
-        {
-            // Check if mobile version of template exists
-            if (file_exists(ROOT . '/templates/mobile/' . $template))
-            {
-                $template = 'mobile/' . $template; // Exists - use mobile content
-            }
-        }
-        
+                
         $tpl->assign(static::$extras);
         $tpl->assign('path', Router::path());
-        $tpl->assign('env', $env);
+        $tpl->assign('env', Env::get());
         $tpl->assign('display',	static::$display);
         $tpl->assign('data', $data);
         
-        echo $tpl->render($template);
+        return $tpl->render($template);
     }
 
+    public static function page($template, $data = array())
+    {
+        echo static::render($template, $data);
+    }
     ///////////////////////
 
     // Add (deduplicated) data to the Scribe::$display variable
-    static function add($var, array $array)
+    public static function add($var, array $array)
     {
-        self::$display[$var] = array_unique(array_merge(self::$display[$var], $array));
+        self::$display[$var] = array_unique(array_merge((array) self::$display[$var], $array));
     }
     
     // Couple of common helper functions
-    static function description($description)
+    public static function description($description)
     {
         self::add('meta', array('description' => $description));
     }
 
-    static function title($title)
+    public static function title($title)
     {
         self::$display['title'] = $title;
     }
