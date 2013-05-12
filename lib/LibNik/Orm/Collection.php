@@ -79,6 +79,22 @@ class Collection extends Common\Collection
         return $this;
     }
     
+    public function natSort($key = null)
+    {
+        if (!$key)
+        {
+            uasort($this->container, function ($a, $b) {
+                return strnatcmp((string) $a, (string) $b);
+            });
+        }
+        else
+        {
+            uasort($this->container, function ($a, $b) {
+                return strnatcmp($a->{$key}, $b->{$key});
+            });            
+        }
+    }
+    
     public function slice($start, $length)
     {
         return new static(array_slice($this->container, $start, $length));
