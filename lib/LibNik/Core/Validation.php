@@ -8,6 +8,7 @@ class Validation
     protected $name = '';
     protected $errors = array();
     protected $source = array();
+    protected $current;
     
     public function __sleep()
     {
@@ -78,6 +79,15 @@ class Validation
         if ($this->source[$this->current] != $this->source[$var]) {
             $this->errors[$this->current] = $message;
         }                
+        return $this;
+    }
+    
+    public function regex($regex, $message = 'Input seems invalid')
+    {
+        if (!preg_match($regex, $this->source[$this->current]))
+        {
+            $this->errors[$this->current] = $message;
+        }
         return $this;
     }
     
