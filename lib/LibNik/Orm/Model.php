@@ -247,6 +247,11 @@ class Model implements \JsonSerializable
         return clone $this->_data;
     }
     
+    final public function dataUpdate(Data $db)
+    {
+        $this->_data = $db->lock();
+    }
+    
     public function cachable($bool = true)
     {
         $this->cache = $bool;
