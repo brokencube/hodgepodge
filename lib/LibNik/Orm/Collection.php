@@ -134,9 +134,13 @@ class Collection extends Common\Collection
     {
         $copy = $this->container;
         
+        // Loop over items
         foreach ($copy as $item_key => $item) {
+            // Loop over filters
             foreach ($where_array as $property => $value_list) {
+                // Each filter can have several acceptable values -- force single item to array
                 if (!is_array($value_list)) $value_list = array($value_list);
+                // Check each value - if we find a matching value than remove this item
                 foreach ($value_list as $value) {
                     if ($item->$property == $value) {
                         unset($copy[$item_key]);
@@ -155,15 +159,21 @@ class Collection extends Common\Collection
     {
         $copy = $this->container;
 
+        // Loop over items
         foreach ($copy as $item_key => $item) {
+            // Loop over filters
             foreach ($where_array as $property => $value_list) {
+                // Each filter can have several acceptable values -- force single item to array
                 if (!is_array($value_list)) $value_list = array($value_list);
+                // Check each value - if we find a matching value than skip to the next filter.
                 foreach ($value_list as $value) {
-                    if ($item->$property != $value) {
-                        unset($copy[$item_key]);
-                        break 2;
+                    if ($item->$property == $value) {
+                        continue 2;
                     }
-               }    
+                }
+                // Failed to break of loop, so the current value matches none of the
+                // values for the current filter, therefore remove the item
+                unset($copy[$item_key]);
             }
         }
         
