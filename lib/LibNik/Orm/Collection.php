@@ -75,21 +75,22 @@ class Collection extends Common\Collection
     //////// Collection modifiers ////////
     public function sort($function)
     {
-        uasort($this->container, $function);
-        return $this;
+        $copy = $this->container;
+        uasort($copy, $function);
+        return new static($copy);
     }
     
     public function natSort($key = null)
     {
         if (!$key)
         {
-            uasort($this->container, function ($a, $b) {
+            return $this->sort(function ($a, $b) {
                 return strnatcmp((string) $a, (string) $b);
             });
         }
         else
         {
-            uasort($this->container, function ($a, $b) {
+            return $this->sort(function ($a, $b) {
                 return strnatcmp($a->{$key}, $b->{$key});
             });            
         }
@@ -113,12 +114,14 @@ class Collection extends Common\Collection
     
     public function add($array)
     {
+        $copy = $this->container;
+        
         if ($array instanceof Collection) $array = $array->toArray();
         if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection->add() expects an array');
         
-        $this->container = array_values(array_merge($this->container, $array));
+        $copy = array_values(array_merge($copy, $array));
         
-        return $this;
+        return new static($copy);
     }
     
     // Remove any items in this collection that match the where clause
@@ -129,39 +132,43 @@ class Collection extends Common\Collection
     
     public function not($where_array)
     {
-        foreach ($this->container as $item_key => $item) {
+        $copy = $this->container;
+        
+        foreach ($copy as $item_key => $item) {
             foreach ($where_array as $property => $value_list) {
                 if (!is_array($value_list)) $value_list = array($value_list);
                 foreach ($value_list as $value) {
                     if ($item->$property == $value) {
-                        unset($this->container[$item_key]);
+                        unset($copy[$item_key]);
                         break 2;
                     }
                }    
             }
         }
         
-        $this->container = array_values($this->container);
+        $copy = array_values($copy);
         
-        return $this;
+        return new static($copy);
     }
 
     public function filter($where_array)
     {
-        foreach ($this->container as $item_key => $item) {
+        $copy = $this->container;
+
+        foreach ($copy as $item_key => $item) {
             foreach ($where_array as $property => $value_list) {
                 if (!is_array($value_list)) $value_list = array($value_list);
                 foreach ($value_list as $value) {
                     if ($item->$property != $value) {
-                        unset($this->container[$item_key]);
+                        unset($copy[$item_key]);
                         break 2;
                     }
                }    
             }
         }
         
-        $this->container = array_values($this->container);
+        $copy = array_values($copy);
         
-        return $this;
+        return new static($copy);
     }
 }
