@@ -28,7 +28,7 @@ class Data
         // Pull in data from $data
         foreach($data as $key => $value) {
             // Make a special object for dates
-            if($this->model['columns'][$key] == 'datetime' and !is_null($value)) {
+            if(($this->model['columns'][$key] == 'datetime' or $this->model['columns'][$key] == 'timestamp') and !is_null($value)) {
                 $this->data[$key] = new Time($value, new \DateTimeZone('UTC'));
             } else {
                 $this->data[$key] = $value;
@@ -150,7 +150,7 @@ class Data
         // Updating normal columns
         if (key_exists($var, $this->model['columns']))
         {
-            if ($this->model['columns'][$var] == 'datetime') {
+            if ($this->model['columns'][$var] == 'datetime' or $this->model['columns'][$var] == 'timestamp') {
                 // Special checks for datetimes
                 if ($value instanceof Time) { // Orm\Time is aware of timezones - preferred
                     $this->data[$var] = $value->mysql();    
