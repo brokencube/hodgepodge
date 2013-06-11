@@ -1,8 +1,9 @@
 <?php
 namespace LibNik\Orm;
 
-class Time extends \DateTime
+class Time extends \DateTimeImmutable
 {
+    const MYSQL_DATE = 'Y-m-d H:i:s';
 	public static $display_format = 'D jS M Y H:i:s T';
 	public static $display_timezone = 'UTC'; // Default to UTC
 	
@@ -17,7 +18,7 @@ class Time extends \DateTime
 	public function mysql()
 	{
 		$this->setTimezone(new \DateTimeZone('UTC')); // Just to make doublely sure!
-		$datetime = $this->format(MYSQL_DATE);
+		$datetime = $this->format(self::MYSQL_DATE);
 		return $datetime;
 	}
 }
