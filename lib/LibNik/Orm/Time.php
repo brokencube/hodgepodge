@@ -1,7 +1,7 @@
 <?php
 namespace LibNik\Orm;
 
-class Time extends \DateTimeImmutable
+class Time extends \DateTime
 {
     const MYSQL_DATE = 'Y-m-d H:i:s';
 	public static $display_format = 'D jS M Y H:i:s T';
