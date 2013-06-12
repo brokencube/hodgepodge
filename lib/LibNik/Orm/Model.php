@@ -175,49 +175,7 @@ class Model implements \JsonSerializable
         $this->table = $data->getTable();
         $this->database = $data->getDatabase();
     }
-    
-    // [FIXME] Is it actually safe to return ids for all objects, or do we want to even obfuscate this?
-    public function jsonSerialize()
-    {
-        return ['id' => $this->id];
-    }
-    
-    // Called after we pull the object out of the session/cache (during the session_start() call, for example)
-    public function __wakeup()
-    {
-        if (!$this->_data) {
-            // Get the data about this object out of the database again (to make sure it's up to date)
-            list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database); 
-            
-            // Database data object unique to this object
-            $this->_data = new Data($data, $this->table, Schema::get($this->database));
-        }
-                
-        // Store the object in the object cache
-        Model::$instance[$this->database][$this->table][strtolower(get_called_class())][$this->id] = $this;
-        
-        // Call replacement constructor after storing in the cache list (to prevent recursion)
-        $this->_init();
-        
-        return $this;
-    }
-        
-    // Because we usually reconstruct the object from the db when it leaves the session,
-    // we only need to keep the id and table/db to fully "rehydrate" the object.
-    // If we are caching the object then keep the Model_Data object for this model.
-    // [Note] Because we are not saving $cache, it will revert to null when the object is pulled out of the cache.
-    //        This is intentional to stop the object becoming stale if it moves from the cache and into another
-    //        serialized location (like the session, for example).
-    
-    public function __sleep()
-    {
-        $properties = array('id', 'table', 'database');
-        if ($this->cache) {
-            $properties[] = '_data';
-        }
-        return $properties;
-    }
-    
+
     // Dynamic object properties - Prefer properties set on the model object over column data from the db (Model_Data object)
     public function __get($var)
     {        
@@ -242,6 +200,47 @@ class Model implements \JsonSerializable
         return isset($this->_data->{$var});
     }
     
+    // [FIXME] Is it actually safe to return ids for all objects, or do we want to even obfuscate this?
+    public function jsonSerialize()
+    {
+        return ['id' => $this->id];
+    }
+    
+    // Because we usually reconstruct the object from the db when it leaves the session,
+    // we only need to keep the id and table/db to fully "rehydrate" the object.
+    // If we are caching the object then keep the Model_Data object for this model.
+    // [Note] Because we are not saving $cache, it will revert to null when the object is pulled out of the cache.
+    //        This is intentional to stop the object becoming stale if it moves from the cache and into another
+    //        serialized location (like the session, for example).
+    
+    public function __sleep()
+    {
+        $properties = array('id', 'table', 'database');
+        if ($this->cache) {
+            $properties[] = '_data';
+        }
+        return $properties;
+    }
+
+    // Called after we pull the object out of the session/cache (during the session_start() call, for example)
+    public function __wakeup()
+    {
+        // Store the object in the object cache
+        Model::$instance[$this->database][$this->table][strtolower(get_called_class())][$this->id] = $this;
+        
+        if (!$this->_data) {
+            // If we don't have a data object, then this object wasn't cached, regenerate the Data object.
+            $this->dataRefresh();
+        }
+        else
+        {
+            // We have a data object, call replacement constructor after storing in the cache list (to prevent recursion)
+            $this->_init();            
+        }
+        
+        return $this;
+    }
+    
     final public function data()
     {
         return clone $this->_data;
@@ -250,6 +249,19 @@ class Model implements \JsonSerializable
     final public function dataUpdate(Data $db)
     {
         $this->_data = $db->lock();
+    }
+    
+    final public function dataRefresh()
+    {
+        list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database); 
+        
+        // Database data object unique to this object
+        $this->_data = new Data($data, $this->table, Schema::get($this->database));
+        
+        // Call replacement constructor after storing in the cache list (to prevent recursion)
+        $this->_init();
+        
+        return $this;        
     }
     
     public function cachable($bool = true)
