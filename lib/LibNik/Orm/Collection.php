@@ -58,18 +58,29 @@ class Collection extends Common\Collection
     {
         $return = array();
         
-        if(!$value) {
-            foreach($this->container as $item) {
-                $return[$item->$key] = $item;
+        // Empty array?
+        if (!count($this->container)) return array();
+        
+        // If we are dealing with a collection of Model objects then user key/value to extract desired property
+        if ($this->container[0] instanceof Model)
+        {
+            if(!$value) {
+                foreach($this->container as $item) {
+                    $return[$item->$key] = $item;
+                }
+                return $return;            
             }
-            return $return;            
+            else
+            {
+                foreach($this->container as $item) {
+                    $return[$item->$key] = $item->$value;
+                }
+                return $return;
+            }
         }
         
-        foreach($this->container as $item) {
-            $return[$item->$key] = $item->$value;
-        }
-        
-        return $return;
+        // If we have normal objects or primatives, just return the internal container
+        return $this->container;
     }
     
     //////// Collection modifiers ////////
