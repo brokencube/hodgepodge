@@ -86,18 +86,22 @@ class Collection extends Common\Collection
     //////// Collection modifiers ////////
     public function unique()
     {
+        $copy = $this->container;
         $clobberlist = [];
-        foreach($this->container as $key => $obj)
+        
+        foreach($copy as $key => $obj)
         {
             if (in_array($obj->id, $clobberlist))
             {
-                unset($this->container[$key]);
+                unset($copy[$key]);
             }
             else
             {
                 $clobberlist[] = $obj->id;
             }
         }
+        
+        return new static($copy);
     }
     
     public function sort($function)
