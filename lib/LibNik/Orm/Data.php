@@ -43,6 +43,15 @@ class Data
         $this->locked = false;
         $this->external = array();
     }
+
+    // Create a open cloned copy of this object, ready to reinsert as a new row.
+    public function duplicate()
+    {
+        $clone = clone $this;
+        $clone->new = true;
+        unset($clone->data['id']);
+        return $clone;
+    }
     
     public function lock()
     {
