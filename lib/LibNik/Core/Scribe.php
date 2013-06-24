@@ -44,7 +44,7 @@ class Scribe
     // Add (deduplicated) data to the Scribe::$display variable
     public static function add($var, array $array)
     {
-        self::$display[$var] = array_unique(array_merge((array) self::$display[$var], $array));
+        self::$display[$var] = array_merge((array) self::$display[$var], $array);
     }
     
     // Couple of common helper functions
