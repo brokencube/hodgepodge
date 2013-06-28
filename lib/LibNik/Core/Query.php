@@ -94,6 +94,11 @@ class Query
     
     /////////////////
     
+    public function escape($string)
+    {
+        return $this->mysql->real_escape_string($string);
+    }
+    
     public function execute($transaction = false)
     {
         // We are only allowed to execute each Query object once!
