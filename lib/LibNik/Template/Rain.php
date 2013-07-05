@@ -32,6 +32,7 @@ class Rain extends \Rain\Tpl implements Templater
             'base_url' => null,
             'tpl_dir' => ROOT.'/templates/',
             'cache_dir' => ROOT.'/templates_c/',
+            'auto_escape' => false,
         ));
         
         $this->assign('config', $config);
