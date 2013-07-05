@@ -7,9 +7,9 @@ class Time extends \DateTime
 	public static $format = 'D jS M Y H:i:s T';
 	public static $timezone = 'UTC'; // Default to UTC
 	
-    public function __construct($time = 'now', DateTimeZone $timezone)
+    public function __construct($time = 'now', \DateTimeZone $timezone)
     {
-        if (!$timezone) $timezone = DateTimeZone(self::$timezone);
+        if (!$timezone) $timezone = \DateTimeZone(self::$timezone);
         parent::__construct($time, $timezone);
     }
     
