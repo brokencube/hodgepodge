@@ -9,7 +9,7 @@ class Time extends \DateTime
 	
     public function __construct($time = 'now', \DateTimeZone $timezone = null)
     {
-        if (!$timezone) $timezone = \DateTimeZone(self::$timezone);
+        if (!$timezone) $timezone = new \DateTimeZone(self::$timezone);
         parent::__construct($time, $timezone);
     }
     
