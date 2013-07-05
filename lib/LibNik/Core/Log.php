@@ -78,22 +78,15 @@ class Log
     {
         if ($this->disabled) return;
         
-        $time = number_format($query->debug['total_time'], 2);
+        $time = number_format($query->debug['total_time'] * 1000, 2);
         $queries = $query->debug['count'] == 1 ? '1 QUERY' : $query->debug['count'] . " QUERIES";
         $con = "Con:".$query->name;
         $preview = static::format(substr(implode(' ', $query->sql),0,100),true);
         
-        $log['header'] = "{$time}s {$con} | {$queries}: $preview";
+        $log['header'] = "{$time}ms {$con} | {$queries}: $preview";
         $log['error'] = $query->error;
-        $log['total_time'] = $query->debug['total_time'];
-        $log['debug'] = $query->debug;
-        
-        // If the number of return parts == number of sql fragments, then the sql is already split up correctly -- skip the expensive regex step
-        if ($query->debug['count'] == count($query->sql)) {
-            $log['query'] = $query->sql;
-        } else {
-            $log['query'] = preg_split("/;+(?=([^'|^\\\']*['|\\\'][^'|^\\\']*['|\\\'])*[^'|^\\\']*[^'|^\\\']$)/", implode("\n", $query->sql));
-        }
+        $log['debug'] = $query->debug;        
+        $log['query'] = $query->sql;
         
         $this->log[] = $log;        
     }
@@ -129,10 +122,11 @@ class Log
                 } else {
                     // Collect stats about queries, but don't log to screen yet
                     $query_count++;
-                    $query_time += $log['total_time'];
+                    $query_time += $log['debug']['total_time'];
                     $query_errors += $log['error'] ? 1 : 0;
                 }
             }
+            $query_time = number_format($query_time, 4);
             
             // We've outputted all of the normal messages, now output query stuff
             if ($query_count) {

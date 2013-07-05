@@ -3,7 +3,7 @@ namespace LibNik\Common;
 
 abstract class Collection implements \ArrayAccess, \Iterator, \Countable, \JsonSerializable
 {
-    protected $container;
+    protected $container = [];
 
     //////// Interface Methods ///////
     public function jsonSerialize()
@@ -35,33 +35,43 @@ abstract class Collection implements \ArrayAccess, \Iterator, \Countable, \JsonS
         return isset($this->container[$offset]) ? $this->container[$offset] : null;
     }    
     
-    function rewind()
+    public function rewind()
     {
         reset($this->container);
     }
     
-    function current()
+    public function current()
     {
         return current($this->container);
     }
 
-    function key()
+    public function key()
     {
         return key($this->container);
     }
 
-    function next()
+    public function next()
     {
         return next($this->container);
     }
     
-    function valid()
+    public function valid()
     {
         return current($this->container) !== false;
     }
     
-    function count()
+    public function count()
     {
         return count($this->container);
-    }    
+    }
+    
+    public function first()
+    {
+        return reset(array_slice($this->container, 0, 1));
+    }
+
+    public function last()
+    {
+        return reset(array_slice($this->container, count($this->container) - 1, 1));
+    }
 }
