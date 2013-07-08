@@ -28,12 +28,12 @@ class Env
 
     public function developmentMode() 
     {
-        return $this->site_mode != 'live';
+        return $this->site_mode == 'development';
     }
 
     public function liveMode() 
     {
-        return $this->site_mode == 'live';
+        return $this->site_mode != 'development';
     }
     
     public function secure() 
@@ -69,7 +69,21 @@ class Env
     /* PUBLIC CONTROL FUNCTIONS */
     protected function __construct() 
     {
-        $this->site_mode = $_SERVER['PARAM1'] == 'live' ? 'live' : 'development';
+        switch ($_SERVER['PARAM1'])
+        {
+            case 'live':
+                $this->site_mode = 'live';
+                break;
+            
+            case 'beta':
+                $this->site_mode = 'beta';
+                break;
+            
+            default:
+                $this->site_mode = 'development';
+                break;
+        }
+        
         $this->secure = ($_SERVER['HTTPS'] == 'on' or $_SERVER['HTTP_X_FORWARDED_PORT'] == '443');
         
         preg_match('#[-_/]([^-_/]+?)(/webroot)?/?$#', $_SERVER['DOCUMENT_ROOT'], $matches);
