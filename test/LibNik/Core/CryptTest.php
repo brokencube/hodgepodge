@@ -1,6 +1,6 @@
 <?php
-use \LibNik\Core\Crypt;
-use \LibNik\Exception;
+use \HodgePodge\Core\Crypt;
+use \HodgePodge\Exception;
 
 class CryptTest extends PHPUnit_Framework_TestCase
 {
