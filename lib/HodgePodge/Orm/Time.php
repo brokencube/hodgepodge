@@ -11,7 +11,7 @@ class Time extends \DateTime
     {
         // Set root timezone to UTC - all data for objects should be stored in UTC
         if (!$root_timezone) $root_timezone = new \DateTimeZone('UTC');
-        parent::__construct($time, $timezone);
+        parent::__construct($time, $root_timezone);
         
         // Move date to display timezone for display
         $this->setTimezone(new \DateTimeZone(self::$display_timezone));

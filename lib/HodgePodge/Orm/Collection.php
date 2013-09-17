@@ -127,7 +127,7 @@ class Collection extends Common\Collection
         }
     }
     
-    public function slice($start, $length)
+    public function slice($start, $length = null)
     {
         return new static(array_slice($this->container, $start, $length));
     }

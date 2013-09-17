@@ -155,11 +155,12 @@ class Model implements \JsonSerializable
     /*        OBJECT METHODS         */
     ///////////////////////////////////
     
-    protected $id;        // Id of the table row this object represents
-    protected $_data;     // Container for the Model_Data object for this row. Used for both internal and external __get access.
-    protected $database;  // Name of db connection relating to this object - useful for extending these objects.
-    protected $table;     // Name of db table relating to this object - useful for extending these objects.
-    protected $cache;     // Retain $_db the next time this item is serialised.
+    protected $id;                // Id of the table row this object represents
+    protected $table;             // Name of db table relating to this object
+    protected $database;          // Name of db connection relating to this object
+
+    protected $_data;             // Container for the Model_Data object for this row. Used for both internal and external __get access.
+    protected $cache = false;     // Retain $_db the next time this item is serialised.
     
     // This is a replacement constructor that is called after the model object has been placed in the instance cache.
     // The real constructor is marked final as the normal constructor can cause infinite loops when combined with Class::get();
