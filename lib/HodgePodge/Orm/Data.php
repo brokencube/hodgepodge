@@ -165,6 +165,8 @@ class Data
                     $this->data[$var] = $value->mysql();    
                 } elseif (($datetime = strtotime($value)) !== false) {// Fall back to standard strings
                     $this->data[$var] = date(MYSQL_DATE, $datetime);
+                } elseif (is_null($value)) { // Allow "null"
+                    $this->data[$var] = null;
                 } else { 
                     // Oops!
                     throw new Exception\Model('MODEL_DATA:DATETIME_VALUE_EXPECTED_FOR_COLUMN', array($var, $value));
