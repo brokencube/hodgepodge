@@ -121,6 +121,7 @@ class Model implements \JsonSerializable
         // Else if we have an array of ids
         } elseif (is_array($ids)) {
             $collection = new Collection();
+            
             foreach ($ids as $key => $id) {
                 // If an id isn't numeric then skip it
                 if (!is_numeric($id))
@@ -132,18 +133,22 @@ class Model implements \JsonSerializable
                 // If we succeed, remove it from the list of ids to search for in the database
                 if (!$force_refresh) {
                     // Check Model object cache
-                    if (isset(Model::$instance[$database][$table][$ids])) {
-                        $collection[] = Model::$instance[$database][$table][$ids];
+                    if (isset(Model::$instance[$database][$table][$id])) {
+                        $collection[] = Model::$instance[$database][$table][$id];
                         unset($ids[$key]);
                     }
                 }
             }
             
             // For any ids we failed to pull out the cache, pull them from the database instead
-            $newresults = static::factory(array('id' => $ids), $class_or_table, $database);
+            if (count($ids) > 0)
+            {
+                $newresults = static::factory(array('id' => $ids), $class_or_table, $database);
+                $collection = $collection->merge($newresults);
+            }
             
             // Merge the database results with the cached results and return
-            return $collection->merge($newresults);
+            return $collection;
             
         // We don't have a valid id
         } else {

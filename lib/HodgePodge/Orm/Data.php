@@ -121,6 +121,7 @@ class Data
             list($raw) = Core\Query::run("Select `{$pivot['column']}` as id from `{$pivot_tablename}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
             
             // Rearrange the list of ids into a flat array
+            $id = array();
             foreach($raw as $raw_id) $id[] = $raw_id['id'];
             
             // Use the model factory to retrieve the objects from the list of ids (using cache first)
