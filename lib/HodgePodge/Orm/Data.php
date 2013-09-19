@@ -123,8 +123,8 @@ class Data
             // Rearrange the list of ids into a flat array
             foreach($raw as $raw_id) $id[] = $raw_id['id'];
             
-            // Use the model factory to retrieve the objects from the list of idsd
-            $this->external[$var] = Model::factory(array('id' => $id), $pivot['table'], $this->database);
+            // Use the model factory to retrieve the objects from the list of ids (using cache first)
+            $this->external[$var] = Model::factoryObjectCache($id, $pivot['table'], $this->database);
             
             return $this->external[$var];
         }

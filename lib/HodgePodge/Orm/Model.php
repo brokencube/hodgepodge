@@ -99,26 +99,58 @@ class Model implements \JsonSerializable
         return get_called_class();
     }
     
-    final public static function factoryObjectCache($id, $class_or_table = null, $database = null, $force_refresh = false)
+    final public static function factoryObjectCache($ids, $class_or_table = null, $database = null, $force_refresh = false)
     {
-        // Invalid id? No object :P
-        if (!is_numeric($id)) return null;
         if (!$database) $database = static::$dbconnection;
         $schema = Schema::get($database);
         list($class, $table) = $schema->guessContext($class_or_table ?: get_called_class());
-        
-        if (!$force_refresh) {
-            // Check Model object cache
-            if (isset(Model::$instance[$database][$table][$id])) {
-                return Model::$instance[$database][$table][$id];
+
+        // If we have a single id
+        if (is_numeric($ids)) {
+            if (!$force_refresh) {
+                // Check Model object cache
+                if (isset(Model::$instance[$database][$table][$ids])) {
+                    return Model::$instance[$database][$table][$ids];
+                }
             }
-        }
+            
+            /* Cache miss, so create new object */
+            $o = new Core\QueryOptions();
+            return static::factory(array('id' => $ids), $class_or_table, $database, $o->limit(1), true);
         
-        /* Cache miss, so create new object */
-        $o = new Core\QueryOptions();
-        return static::factory(array('id' => $id), $class_or_table, $database, $o->limit(1), true);
+        // Else if we have an array of ids
+        } elseif (is_array($ids)) {
+            $collection = new Collection();
+            foreach ($ids as $key => $id) {
+                // If an id isn't numeric then skip it
+                if (!is_numeric($id))
+                {
+                    unset($ids[$key]);
+                    continue;
+                }
+                // Try and pull the relevant object out of the cache.
+                // If we succeed, remove it from the list of ids to search for in the database
+                if (!$force_refresh) {
+                    // Check Model object cache
+                    if (isset(Model::$instance[$database][$table][$ids])) {
+                        $collection[] = Model::$instance[$database][$table][$ids];
+                        unset($ids[$key]);
+                    }
+                }
+            }
+            
+            // For any ids we failed to pull out the cache, pull them from the database instead
+            $newresults = static::factory(array('id' => $ids), $class_or_table, $database);
+            
+            // Merge the database results with the cached results and return
+            return $collection->merge($newresults);
+            
+        // We don't have a valid id
+        } else {
+            return null;
+        }
     }
-    
+        
     // Get data from database from which we can construct Model objects
     final protected static function factoryData($where, $table, $database, Core\QueryOptions $options = null)
     {
