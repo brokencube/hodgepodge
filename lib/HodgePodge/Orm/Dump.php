@@ -131,15 +131,22 @@ class Dump
                     $namespace = explode('\\', get_class($obj));
                     $class = array_pop($namespace);                    
                     $display1 = implode('\\', $namespace) . '\\';
-                    $display2 = $class;                
+                    $display2 = $class;
+                    $display3 = " [".implode(',', $ids)."]";
+                    if (method_exists($obj, '__toString'))
+                    {                        
+                        foreach ($value as $obj) $objstrings[] = (string) $obj;
+                        $display4 = ' (' . implode(',', $objstrings) . ')';
+                    }
                 }
                 else
                 {
                     $display1 = 'empty';                    
+                    $display3 = " []";
                 }
                 
                 $type = 'Collection';
-                $display3 = " [".implode(',', $ids)."]";
+                
             break;
             
             case $value instanceof Time:
