@@ -115,6 +115,8 @@ class Dump
                 $display1 = implode('\\', $namespace) . '\\';
                 $display2 = $class;                
                 $display3 = " ".$value->id;
+                if (method_exists($value, '__toString')) $display4 = ' (' . (string) $value . ')';
+                
             break;
 
             case $value instanceof Collection:
@@ -152,6 +154,7 @@ class Dump
                 $type = 'object';
                 $display1 = implode('\\', $namespace) . '\\';
                 $display2 = $class;
+                if (method_exists($value, '__toString')) $display4 = ' (' . (string) $value . ')';
             break;
             
             case is_bool($value):
@@ -184,6 +187,7 @@ class Dump
                 $display1.
                 $display2.
                 $display3.
+                $display4.
                 "</del>\n";   
         }
         else
@@ -192,6 +196,7 @@ class Dump
             "<span style='color: #999999;'>$display1</span>".
             "<span style='color: #000077;'>$display2</span>".
             "<span style='color: #cc0000;'>$display3</span>".
+            "<span style='color: #007700;'>$display4</span>".
             "\n";
         }
     }
