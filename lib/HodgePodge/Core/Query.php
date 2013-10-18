@@ -208,7 +208,7 @@ class Query
                     if ($value instanceof SqlString) {
                         $where_array[] = (string) $value;
                     } else {
-                        $where_array[] = $this->createQueryPart($column, $value);
+                        $where_array[] = $this->createQueryPart($column, $value, true);
                     }
                 }
                 $query .= " WHERE " . implode("\n AND ", $where_array);
@@ -237,8 +237,11 @@ class Query
         return $query;
     }
     
-    function createQueryPart($column, $value)
+    function createQueryPart($column, $value, $where = false)
     {
+        // Special case for null where
+        if ($where and is_null($value)) return "`$column` is null";
+        
         $col = "`$column` = ";
         switch (true) {
             case $value instanceof SqlString:
