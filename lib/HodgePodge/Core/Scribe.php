@@ -5,29 +5,28 @@ use HodgePodge\Exception;
 
 class Scribe
 {
-    protected static $display = array(
+    public $extra = array();
+    protected $display = array(
         'css' => array(),     // Array of css files to include
         'lesscss' => array(), // Array of lesscss files to include
         'js' => array(),      // Array of js files to include
         'meta' => array(),    // <meta> tags
         'title' => '',        // <title> tag
     );
-    
-    public static $extras = array();
-    
-    const ENGINE_SMARTY = '\\HodgePodge\\Template\\Smarty';
-    const ENGINE_RAIN = '\\HodgePodge\\Template\\Rain';
-    
-    public static $engine = Scribe::ENGINE_SMARTY;
-    
-    public static function render($template, $data = array())
+        
+    public function __construct(\HodgePodge\Interfaces\Templater $engine = null)
+    {
+        if (!$engine) $engine = new \HodgePodge\Template\Smarty;
+        $this->engine = $engine;
+    }
+        
+    public function render($template, $data = array())
     {
         if (!$template) throw new Exception\Generic('NO_TEMPLATE', 'No template given');
         
-        $tpl = new static::$engine;
-                
-        $tpl->assign(static::$extras);
-        $tpl->assign('path', Router::path());
+        $tpl = $this->engine;
+        $tpl->assign($this->extra);
+        $tpl->assign('display', $this->display);
         $tpl->assign('env', Env::get());
         $tpl->assign('display',	static::$display);
         $tpl->assign('data', $data);
@@ -37,24 +36,46 @@ class Scribe
 
     public static function page($template, $data = array())
     {
-        echo static::render($template, $data);
-    }
-    ///////////////////////
-
-    // Add (deduplicated) data to the Scribe::$display variable
-    public static function add($var, array $array)
-    {
-        self::$display[$var] = array_merge((array) self::$display[$var], $array);
+        $scribe = new static();
+        echo $scribe->render($template, $data, $options);
     }
     
-    // Couple of common helper functions
-    public static function description($description)
+    ///////////////////////
+    public function extra($var, $data)
     {
-        self::add('meta', array('description' => $description));
+        $this->extra[$var] = $data;
+    }
+    
+    public function set($var, $data)
+    {
+        $this->display[$var] = $data;
     }
 
-    public static function title($title)
+    // Add (deduplicated) data to the Scribe::$display variable
+    public function add($var, array $array)
     {
-        self::$display['title'] = $title;
+        $this->display[$var] = array_merge((array) $this->display[$var], $array);
+    }
+    
+    // Some common helper functions
+    public function js(array $array)
+    {
+        $this->add('js', $array);
+    }
+
+    // Some common helper functions
+    public function css(array $array)
+    {
+        $this->add('css', $array);
+    }
+
+    public function description($description)
+    {
+        $this->add('meta', array('description' => $description));
+    }
+
+    public function title($title)
+    {
+        $this->set('title', $title);
     }
 }
