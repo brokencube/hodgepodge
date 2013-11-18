@@ -35,7 +35,7 @@ class Scribe
     
     public function display($template, $data = array())
     {
-        echo $scribe->render($template, $data);
+        echo $this->render($template, $data);
     }
     
     ///////////////////////
