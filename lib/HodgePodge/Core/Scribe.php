@@ -28,7 +28,6 @@ class Scribe
         $tpl->assign($this->extra);
         $tpl->assign('display', $this->display);
         $tpl->assign('env', Env::get());
-        $tpl->assign('display',	static::$display);
         $tpl->assign('data', $data);
         
         return $tpl->render($template);
