@@ -33,11 +33,10 @@ class Scribe
         
         return $tpl->render($template);
     }
-
-    public static function page($template, $data = array())
+    
+    public function display($template, $data = array())
     {
-        $scribe = new static();
-        echo $scribe->render($template, $data, $options);
+        echo $scribe->render($template, $data);
     }
     
     ///////////////////////
