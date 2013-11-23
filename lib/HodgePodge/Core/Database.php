@@ -13,7 +13,8 @@ class Database
      ************************/
     public static function register($db, $name = 'default')
     {
-        if(!is_array($db)) throw new Exception\Database('NO_DETAILS', 'No database details provided to DB::register()');
+        if (!is_array($db))
+            throw new Exception\Database('NO_DETAILS', 'No database details provided to DB::register()');
         
         self::$details[$name] = $db;
     }
@@ -32,8 +33,10 @@ class Database
     {
         global $config;
         
-        if (!self::$connections[$name])    {
-            if (!$db = self::$details[$name]) throw new Exception\Database('CONNECTION_NOT_DEFINED', "Database connection '$name' not defined in config.");
+        if (!self::$connections[$name]) {
+            if (!$db = self::$details[$name]) {
+                throw new Exception\Database('CONNECTION_NOT_DEFINED', "Database connection '$name' not defined in config.");
+            }
             
             self::$connections[$name] = new \mysqli($db['server'], $db['user'], $db['pass'], $db['database']);
             self::$connections[$name]->set_charset('utf8');
@@ -49,7 +52,7 @@ class Database
     
     public static function closeConnection($name = 'default')
     {
-        if(self::$connections[$name])
+        if (self::$connections[$name])
         {
             self::$connections[$name]->close();
             unset(self::$connections[$name]);
@@ -61,15 +64,11 @@ class Database
     public static function ping($name = null)
     {
         $allok = true;
-        if (!$name)
-        {
-            foreach(self::$connections as $conn => $db)
-            {
+        if (!$name) {
+            foreach (self::$connections as $conn => $db) {
                 $allok = self::autoconnect($conn)->ping() & $allok;
             }
-        }
-        else
-        {
+        } else {
             $allok = self::autoconnect($name)->ping();
         }
         return $allok;

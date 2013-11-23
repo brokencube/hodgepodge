@@ -16,11 +16,13 @@ class Image
 
     public static function fromFile($filename)
     {
-        if (is_array($filename)) { // If is array, assume it came from $_FILES upload 
+        if (is_array($filename)) { // If is array, assume it came from $_FILES upload
             $filename = $filename['tmp_name'];
         }
         
-        if (!$filename) return false;
+        if (!$filename) {
+            return false;
+        }
         
         // Imagemagick cannot read directly from URLs - so open the URL as a file stream instead
         $file = @file_get_contents($filename);
@@ -42,7 +44,7 @@ class Image
 
     public function __destruct()
     {
-        if($this->image) {
+        if ($this->image) {
             $this->image->destroy();
         }
     }
@@ -273,7 +275,7 @@ class Image
                 break;
             
             default:
-                Log::warning('Unknown text watermark compass direction ('.$compass.') - C used' );
+                Log::warning('Unknown text watermark compass direction ('.$compass.') - C used');
                 // no break - default to center
             case 'NW-SE':
             case 'SW-NE':
@@ -340,7 +342,7 @@ class Image
                 return $this;
             
             case 1:
-                $this->image->modulateImage(95,105,100);
+                $this->image->modulateImage(95, 105, 100);
                 return $this;
             
             default:
@@ -351,7 +353,7 @@ class Image
                 $stats = $this->image->getImageChannelStatistics();
                 
                 // Calculate global mean and std dev
-                foreach($colorspace as $cs) {
+                foreach ($colorspace as $cs) {
                     $stats = $this->image->getImageChannelMean($cs);
                     $mean += $stats['mean'] / 3;
                     $stdDev += $stats['standardDeviation'] / 3;
@@ -364,8 +366,7 @@ class Image
                 $min = $mean - ($boundary * $stdDev);
                 $min = ($min < 0)?0:$min;
                 
-                foreach($colorspace as $cs)
-                {
+                foreach ($colorspace as $cs) {
                     $this->image->levelImage($min, 1, $max, $cs);
                 }
                 
@@ -377,7 +378,7 @@ class Image
                 $stats = $this->image->getImageChannelStatistics();
                 
                 // Calculate global mean and std dev
-                foreach($colorspace as $cs) {
+                foreach ($colorspace as $cs) {
                     $stats = $this->image->getImageChannelMean($cs);
                     $mean += $stats['mean'] / 3;
                     $stdDev += $stats['standardDeviation'] / 3;
@@ -390,11 +391,11 @@ class Image
                 $min = $mean - ($boundary * $stdDev);
                 $min = ($min < 0)?0:$min;
                 
-                foreach($colorspace as $cs) {
+                foreach ($colorspace as $cs) {
                     $this->image->levelImage($min, 1, $max, $cs);
                 }
                 
-                $this->image->modulateImage(97,100,100);
+                $this->image->modulateImage(97, 100, 100);
                 return $this;
         }
     }

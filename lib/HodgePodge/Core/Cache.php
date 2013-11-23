@@ -9,9 +9,9 @@ class Cache
     static public $engine = Cache::MEMCACHED;
     static public $lifetime = array('default' => 3600);
 
-    static function lifetime($lifetime, $group = 'default')
+    public static function lifetime($lifetime, $group = 'default')
     {
-        self::$lifetime[$group] = $lifetime;
+        static::$lifetime[$group] = $lifetime;
     }
 
     private $obj;
@@ -29,7 +29,7 @@ class Cache
     // Alternate syntax: get: $data = $cache()  save: $cache($data);
     public function __invoke()
     {
-        if(func_num_args()) {
+        if (func_num_args()) {
             return $this->obj->save(func_get_arg(0));
         } else {
             return $this->obj->get();
@@ -37,12 +37,12 @@ class Cache
     }
 
     public function save($contents)
-    {        
+    {
         return $this->obj->save($contents);
     }
 
     public function delete()
-    {        
+    {
         return $this->obj->delete();
     }
 }

@@ -4,10 +4,25 @@ namespace HodgePodge\Core;
 class Log
 {
     /* Quick shortcut functions for quick and easy logging. */
-    public static function debug($message, $level = 1){ self::get()->log('d', $message); }
-    public static function notice($message, $level = 1){ self::get()->log('n', $message); }
-    public static function warning($message, $level = 1){ self::get()->log('w', $message); }
-    public static function error($message, $level = 1){ self::get()->log('e', $message); }
+    public static function debug($message, $level = 1)
+    {
+        self::get()->log('d', $message);
+    }
+    
+    public static function notice($message, $level = 1)
+    {
+        self::get()->log('n', $message);
+    }
+    
+    public static function warning($message, $level = 1)
+    {
+        self::get()->log('w', $message);
+    }
+    
+    public static function error($message, $level = 1)
+    {
+        self::get()->log('e', $message);
+    }
     
     /* Options */
 

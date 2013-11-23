@@ -9,7 +9,7 @@ class SqlString
     {
         $this->string = $string;
     }
-	
+    
     public function __toString()
     {
         return $this->string;

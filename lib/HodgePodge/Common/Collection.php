@@ -33,7 +33,7 @@ abstract class Collection implements \ArrayAccess, \Iterator, \Countable, \JsonS
     public function offsetGet($offset)
     {
         return isset($this->container[$offset]) ? $this->container[$offset] : null;
-    }    
+    }
     
     public function rewind()
     {
