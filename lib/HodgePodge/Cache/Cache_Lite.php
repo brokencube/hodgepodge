@@ -1,7 +1,7 @@
 <?php
 namespace HodgePodge\Cache;
 
-use HodgePodge\Interfaces;
+use HodgePodge\Cache;
 
 class Cache_Lite extends \Cache_Lite implements Interfaces\Cache
 {
