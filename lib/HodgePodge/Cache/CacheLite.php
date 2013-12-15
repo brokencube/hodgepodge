@@ -3,7 +3,7 @@ namespace HodgePodge\Cache;
 
 use HodgePodge\Cache;
 
-class Cache_Lite extends \Cache_Lite implements Interfaces\Cache
+class CacheLite extends \Cache_Lite implements Interfaces\Cache
 {
     private $cache_group = 'default';
     private $cache_id = null;

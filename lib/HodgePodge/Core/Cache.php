@@ -4,7 +4,7 @@ namespace HodgePodge\Core;
 class Cache
 {
     const MEMCACHED = 'HodgePodge\\Cache\\Memcached';
-    const CACHE_LITE = 'HodgePodge\\Cache\\Cache_Lite';
+    const CACHE_LITE = 'HodgePodge\\Cache\\CacheLite';
     
     static public $engine = Cache::MEMCACHED;
     static public $lifetime = array('default' => 3600);
