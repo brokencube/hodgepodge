@@ -31,7 +31,7 @@ class Collection extends Common\Collection
                 throw new BadMethodCallException();
             }
             
-            $value = $item->$name($arguments);
+            $value = call_user_func_array(array($item, $name),$arguments);
             if ($item instanceof Model) {
                 if ($value instanceof Collection) {
                     $list = array_merge($list, $value->toArray());
