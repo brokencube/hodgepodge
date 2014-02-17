@@ -119,7 +119,10 @@ class Query
             
             // If we have a result set, collated it into an array of rows
             if ($result = $this->mysql->store_result()) {
-                $return[$count] = $result->fetch_all(MYSQLI_ASSOC);
+                while($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                    $return[$count][] = $row;
+                }            
+                #$return[$count] = $result->fetch_all(MYSQLI_ASSOC);
                 // We don't need that funky result resource anymore...
                 $result->close();
             }

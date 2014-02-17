@@ -2,20 +2,21 @@
 namespace HodgePodge\Cache;
 
 use HodgePodge\Interfaces;
+use HodgePodge\Core;
 
 class Memcached implements Interfaces\Cache
 {
-    protected $group = 'default';
-    protected $id = null;
-    protected $key = null;
-    protected $memcached = null;
+    protected $group;
+    protected $id;
+    protected $key;
+    protected $memcached;
     
     public function __construct($id, $group = null)
     {
         global $config;
         
         $this->id = $id;
-        if($group) $this->group = $group;
+        $this->group = is_null($group) ? $group : 'default';
         $this->key = 'HodgePodge:Cache:' . $this->group . ':' . $this->id;
         
         list($server, $port) = explode(':', $config['memcache']['url']);
@@ -26,7 +27,9 @@ class Memcached implements Interfaces\Cache
     public function get()
     {
         global $config;
-        if ($config['cache']['disable']) return false;
+        if ($config['cache']['disable']) {
+            return false;
+        }
         
         return $this->memcached->get($this->key);
     }
@@ -34,9 +37,11 @@ class Memcached implements Interfaces\Cache
     public function save($contents)
     {
         global $config;
-        if ($config['cache']['disable']) return false;
+        if ($config['cache']['disable']) {
+            return false;
+        }
         
-        $lifetime = \HodgePodge\Core\Cache::$lifetime[$this->group ?: 'default'] ?: 3600;
+        $lifetime = Core\Cache::$lifetime[$this->group ?: 'default'] ?: 3600;
         
         return $this->memcached->set($this->key, $contents, $lifetime);
     }
@@ -44,8 +49,10 @@ class Memcached implements Interfaces\Cache
     public function delete()
     {
         global $config;
-        if ($config['cache']['disable']) return false;
+        if ($config['cache']['disable']) {
+            return false;
+        }
         
-        return $this->memcached->delete($this->key);        
+        return $this->memcached->delete($this->key);
     }
 }
