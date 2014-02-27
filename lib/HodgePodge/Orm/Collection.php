@@ -106,7 +106,7 @@ class Collection extends Common\Collection
     
     public function sort($function)
     {
-        $copy = $this->container;
+        $copy = clone $this->container;
         uasort($copy, $function);
         return new static($copy);
     }
