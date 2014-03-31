@@ -28,7 +28,7 @@ class Collection extends Common\Collection
         $list = array();
         foreach($this->container as $item) {
             if (!method_exists($item, $name)) {
-                throw new BadMethodCallException();
+                throw new \BadMethodCallException();
             }
             
             $value = call_user_func_array(array($item, $name),$arguments);
@@ -49,7 +49,7 @@ class Collection extends Common\Collection
     {
         if (is_null($array)) $array = array();
         if ($array instanceof Collection) $array = $array->toArray();
-        if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection::__construct() expects an array - ' . gettype($array) . ' given');
+        if (!is_array($array)) throw new \InvalidArgumentException('Orm\Collection::__construct() expects an array - ' . gettype($array) . ' given');
         
         $this->container = $array;
     }
@@ -148,7 +148,7 @@ class Collection extends Common\Collection
         $copy = $this->container;
         
         if ($array instanceof Collection) $array = $array->toArray();
-        if (!is_array($array)) throw new InvalidArgumentException('Orm\Collection->add() expects an array');
+        if (!is_array($array)) throw new \InvalidArgumentException('Orm\Collection->add() expects an array');
         
         $copy = array_values(array_merge($copy, $array));
         
