@@ -165,7 +165,7 @@ class Data
                 if ($value instanceof Time) { // Orm\Time is aware of timezones - preferred
                     $this->data[$var] = $value->mysql();    
                 } elseif (($datetime = strtotime($value)) !== false) {// Fall back to standard strings
-                    $this->data[$var] = date(MYSQL_DATE, $datetime);
+                    $this->data[$var] = date(Time::MYSQL_DATE, $datetime);
                 } elseif (is_null($value)) { // Allow "null"
                     $this->data[$var] = null;
                 } else { 
