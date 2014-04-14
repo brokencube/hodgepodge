@@ -187,6 +187,23 @@ class Model implements \JsonSerializable
         return $model_data;
     }
     
+    public static function clearInstanceCache($database = null, $table = null, $id = null)
+    {
+        if (isset($id)) {
+            unset(static::$instance[$database][$table][$id]);
+            return;
+        }
+        if (isset($table)) {
+            unset(static::$instance[$database][$table]);
+            return;
+        }
+        if (isset($database)) {
+            unset(static::$instance[$database]);
+            return;
+        }
+        unset(static::$instance);
+        return;
+    }
     
     ///////////////////////////////////
     /*        OBJECT METHODS         */
