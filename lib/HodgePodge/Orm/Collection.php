@@ -121,7 +121,7 @@ class Collection extends Common\Collection
         }
         else
         {
-            return $this->sort(function ($a, $b) {
+            return $this->sort(function ($a, $b) use ($key) {
                 return strnatcmp($a->{$key}, $b->{$key});
             });            
         }
