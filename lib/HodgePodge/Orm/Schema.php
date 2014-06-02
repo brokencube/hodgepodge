@@ -35,7 +35,7 @@ class Schema {
         Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
 
         $db = Database::details($dbconnection);
-        $cache = new Cache('schema_' . md5($dbconnection . $namespace . $db['database'], 'model'));
+        $cache = new Cache('schema_' . md5($dbconnection . $namespace . $db['database']), 'model');
 
         if ($cachebust or !$obj = $cache()) {
             // Get a list of all foreign keys in this database
