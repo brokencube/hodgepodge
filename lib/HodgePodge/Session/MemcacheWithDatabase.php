@@ -33,7 +33,7 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
     
     public function read($id)
     {
-        $data = $this->memcached->get('session:' . $id);
+        $data = $this->memcached->get(ini_get('memcached.sess_prefix') . $id);
         
         // No data, try and read from database.
         if (is_null($data))
@@ -57,7 +57,7 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
     
     public function write($id, $data)
     {
-        $result = $this->memcached->set('session:' . $id, $data, $this->expiry);
+        $result = $this->memcached->set(ini_get('memcached.sess_prefix') . $id, $data, $this->expiry);
         
         // Write back data to database if updated OR with 1% chance (to keep expiry relatively up-to-date)
         if ($data !== $this->initialRead or rand(0, 100) == 100)
