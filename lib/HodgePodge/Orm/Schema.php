@@ -119,7 +119,7 @@ class Schema
                     foreach ($tableinfo as $i => $table)
                     {
                         // Outersect of tables to create an array of all OTHER foreign keys in this table, for this foreign key.
-                        $othertables = array_values(array_diff_assoc(array($i => $tableinfo), $tableinfo));
+                        $othertables = array_values(array_diff_assoc(array($i => $table), $tableinfo));
                         
                         $model[ $table['table'] ][ 'many-to-many' ][ $property_name ] = array(
                             'pivot' => $pivotname,
