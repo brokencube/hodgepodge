@@ -267,6 +267,9 @@ class Data
             // Skip property if this isn't an M-M table (M-1 and 1-M tables are dealt with in other ways)
             if (!$pivot = $this->model['many-to-many'][$table]) continue;
             
+            // We can only do updates support simple connection access for 2 key pivots.
+            if (count($pivot['connections']) != 1) continue;
+            
             // Clear out any existing data for this object - this is safe because we are in an atomic transaction.
             $query->sql("Delete from $table where {$pivot['id']} = @id");
             
@@ -276,7 +279,7 @@ class Data
                     $table,                              // Pivot table
                     array(
                         $pivot['id'] => $origin_id,      // Id of this object
-                        $pivot['column'] => $object->id  // Id of object linked to this object
+                        $pivot['connections'][0]['column'] => $object->id  // Id of object linked to this object
                     )
                 );
             }
