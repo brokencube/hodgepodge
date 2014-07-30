@@ -7,7 +7,9 @@ use HodgePodge\Core\Query;
 use HodgePodge\Core\Cache;
 use HodgePodge\Core\Database;
 
-class Schema {
+class Schema
+{
+    const CURRENT_VERSION = 2;
     
     public static $object_list = array();
     
@@ -23,21 +25,30 @@ class Schema {
     protected $model;
     protected $database;
     protected $namespace;
+    protected $version;
     
     protected function __construct($model, $database, $namespace) {
         $this->model = $model;
         $this->database = $database;
         $this->namespace = $namespace;
+        $this->version = static::CURRENT_VERSION;
     }
     
     public static function generate($dbconnection = 'default', $namespace = 'models', $cachebust = false)
     {
         Cache::lifetime(60 * 60 * 24 * 7, 'model'); // Cache model weekly
-
+        
         $db = Database::details($dbconnection);
         $cache = new Cache('schema_' . md5($dbconnection . $namespace . $db['database']), 'model');
-
-        if ($cachebust or !$obj = $cache()) {
+        
+        $obj = $cache();
+        
+        if ($obj && $obj->version != static::CURRENT_VERSION)
+        {
+            unset($obj);
+        }
+        
+        if ($cachebust or !$obj) {
             // Get a list of all foreign keys in this database
             $query = new Query($dbconnection);
             $query->sql("
@@ -94,40 +105,38 @@ class Schema {
             
             // Now look for pivot tables 
             foreach ($model as $pivotname => $pivot) {
-                // If we have found a table with only 2 columns which are both foreign keys then this must be a pivot table
-                if (count($pivot['many-to-one']) == 2 and count($pivot['columns']) == 2) {
-                    // Grab both foreign keys and rearrange them into two arrays.
-                    $table = array();
+                // If we have found a table with only foreign keys then this must be a pivot table
+                if (count($pivot['many-to-one']) > 1 and count($pivot['columns']) == count($pivot['many-to-one'])) {
+                    // Grab all foreign keys and rearrange them into arrays.
+                    $tableinfo = array();
                     foreach($pivot['many-to-one'] as $column => $tablename) {
-                        $table[] = array('column' => $column . '_id', 'table' => $tablename);
+                        $tableinfo[] = array('column' => $column . '_id', 'table' => $tablename);
                     }
                     
                     $property_name = Schema::underscoreCase($pivotname);
                     
                     // For each foreign key, store details in the table it point to on how to get to the OTHER table in the "Many to Many" relationship
-                    $model[ $table[0]['table'] ][ 'many-to-many' ][ $property_name ] = array(
-                        'pivot' => $pivotname,
-                        'column' => $table[1]['column'],
-                        'table' => $table[1]['table'],
-                        'id' => $table[0]['column'],
-                    );
-                    
-                    $model[ $table[1]['table'] ][ 'many-to-many' ][ $property_name ] = array(
-                        'pivot' => $pivotname,
-                        'column' => $table[0]['column'],
-                        'table' => $table[0]['table'],
-                        'id' => $table[1]['column'],
-                    );
+                    foreach ($tableinfo as $i => $table)
+                    {
+                        // Outersect of tables to create an array of all OTHER foreign keys in this table, for this foreign key.
+                        $othertables = array_values(array_diff_assoc(array($i => $tableinfo), $tableinfo));
+                        
+                        $model[ $table['table'] ][ 'many-to-many' ][ $property_name ] = array(
+                            'pivot' => $pivotname,
+                            'connections' => $othertables,
+                            'id' => $table['column'],
+                        );
+                        
+                    }
                     
                     $model[$pivotname]['type'] = 'pivot';
                     
-                    // Remove the M-1 keys for this table to encapsulate the M-M scheme.
-                    foreach((array) $model[ $table[0]['table'] ][ 'one-to-many' ] as $key => $val) {
-                        if ($val['table'] == $pivotname) unset ($model[ $table[0]['table'] ][ 'one-to-many' ][$key]);
-                    }
-                    
-                    foreach((array) $model[ $table[1]['table'] ][ 'one-to-many' ] as $key => $val) {
-                        if ($val['table'] == $pivotname) unset ($model[ $table[1]['table'] ][ 'one-to-many' ][$key]);
+                    // Remove the M-1 keys for these tables to fully encapsulate the M-M scheme.
+                    foreach ($tableinfo as $table)
+                    {
+                        foreach((array) $model[ $table['table'] ][ 'one-to-many' ] as $key => $val) {
+                            if ($val['table'] == $pivotname) unset ($model[ $table['table'] ][ 'one-to-many' ][$key]);
+                        }
                     }
                 }
             }

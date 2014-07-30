@@ -74,6 +74,10 @@ class Model extends Generic
                 $class = get_class($value);
                 return 'Trying to update property "'.$table.'" (pivot:.'.$pivot['pivot'].') - Was expecting an array of "'.$pivot['table'].'" objects, but found a "'.$class.'"!';
             
+            case 'MODEL_DATA:CANNOT_CALL_MULTIPIVOT_AS_PROPERTY':
+                list($column, $value) = $data;
+                return 'Property "'.$column.'" represents a M-M (Pivot) relationship with more than two keys. As we don\'t know which type of object to return (as there are multiple choices), you can\'t call this link as a simple property. Use the $model->property([\$where]) syntax instead.';
+            
             default:
                 return "Unknown code";
         }

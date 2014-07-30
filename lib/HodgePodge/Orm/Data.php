@@ -95,7 +95,7 @@ class Data
         /* Look for lists of objects in other tables referencing this one */
         if (key_exists($var, (array) $this->model['one-to-many'])) {
             // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$id = $this->data['id']) return array();
+            if (!$id = $this->data['id']) return new Collection();
             
             $table = $this->model['one-to-many'][$var]['table'];
             $column = $this->model['one-to-many'][$var]['column_name'];
@@ -109,23 +109,26 @@ class Data
         /* Search $model['many-to-many'] to see if an appropriate pivot string has been defined */
         if (key_exists($var, (array) $this->model['many-to-many'])) {
             // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$this->data['id']) return array();
+            if (!$this->data['id']) return new Collection();
             
             // Get pivot schema
             $pivot = $this->model['many-to-many'][$var];
+            
+            // We can only support simple connection access for 2 key pivots.
+            if (count($pivot['connections']) != 1) throw new Exception\Model('MODEL_DATA:CANNOT_CALL_MULTIPIVOT_AS_PROPERTY', array($var));
             
             // Get a list of ids linked to this object (i.e. the tablename_id stored in the pivot table)
             $pivot_schema = $this->schema->getTable($pivot['pivot']);
             $pivot_tablename = $pivot_schema['table_name'];
             
-            list($raw) = Core\Query::run("Select `{$pivot['column']}` as id from `{$pivot_tablename}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
+            list($raw) = Core\Query::run("Select `{$pivot['connections'][0]['column']}` as id from `{$pivot_tablename}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
             
             // Rearrange the list of ids into a flat array
             $id = array();
             foreach($raw as $raw_id) $id[] = $raw_id['id'];
             
             // Use the model factory to retrieve the objects from the list of ids (using cache first)
-            $this->external[$var] = Model::factoryObjectCache($id, $pivot['table'], $this->database);
+            $this->external[$var] = Model::factoryObjectCache($id, $pivot['connections'][0]['table'], $this->database);
             
             return $this->external[$var];
         }
