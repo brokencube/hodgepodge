@@ -1,6 +1,6 @@
 <?php
 
-namespace HodgePodge\CLI;
+namespace HodgePodge\Cli;
 
 class Color {
     protected static $ANSI_CODES = array(
