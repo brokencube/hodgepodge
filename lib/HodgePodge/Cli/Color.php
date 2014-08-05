@@ -29,7 +29,7 @@ class Color {
         "bg-white"   => 47
     );
     
-    public function colorise($colorstring, $string)
+    public static function colorise($colorstring, $string)
     {
         $colors = explode('+', $colorstring);
         $code = '';
@@ -52,18 +52,18 @@ class Color {
         return $code . $string . $reset;
     }
     
-    public function red($string)         { return static::colorise('red+bold', $string);     }
-    public function green($string)       { return static::colorise('green+bold', $string);   }
-    public function yellow($string)      { return static::colorise('yellow+bold', $string);  }
-    public function blue($string)        { return static::colorise('blue+bold', $string);    }
-    public function magenta($string)     { return static::colorise('magenta+bold', $string); }
-    public function cyan($string)        { return static::colorise('cyan+bold', $string);    }
-    public function white($string)       { return static::colorise('white+bold', $string);   }
-    public function darkred($string)     { return static::colorise('red', $string);          }
-    public function darkgreen($string)   { return static::colorise('green', $string);        }
-    public function darkyellow($string)  { return static::colorise('yellow', $string);       }
-    public function darkblue($string)    { return static::colorise('blue', $string);         }
-    public function darkmagenta($string) { return static::colorise('magenta', $string);      }
-    public function darkcyan($string)    { return static::colorise('cyan', $string);         }
-    public function darkwhite($string)   { return static::colorise('white', $string);        }
+    public static function red($string)         { return static::colorise('red+bold', $string);     }
+    public static function green($string)       { return static::colorise('green+bold', $string);   }
+    public static function yellow($string)      { return static::colorise('yellow+bold', $string);  }
+    public static function blue($string)        { return static::colorise('blue+bold', $string);    }
+    public static function magenta($string)     { return static::colorise('magenta+bold', $string); }
+    public static function cyan($string)        { return static::colorise('cyan+bold', $string);    }
+    public static function white($string)       { return static::colorise('white+bold', $string);   }
+    public static function darkred($string)     { return static::colorise('red', $string);          }
+    public static function darkgreen($string)   { return static::colorise('green', $string);        }
+    public static function darkyellow($string)  { return static::colorise('yellow', $string);       }
+    public static function darkblue($string)    { return static::colorise('blue', $string);         }
+    public static function darkmagenta($string) { return static::colorise('magenta', $string);      }
+    public static function darkcyan($string)    { return static::colorise('cyan', $string);         }
+    public static function darkwhite($string)   { return static::colorise('white', $string);        }
 }
