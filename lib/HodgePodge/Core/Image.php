@@ -405,7 +405,7 @@ class Image
         }
     }
 
-    protected static function calculate_compass($fullx, $fully, $partx, $party, $compass)
+    protected static function calculateCompass($fullx, $fully, $partx, $party, $compass)
     {
         switch($compass)
         {
