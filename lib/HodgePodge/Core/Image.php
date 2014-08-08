@@ -41,6 +41,11 @@ class Image
             return false;
         }
     }
+    
+    public function __construct(\Imagick $image)
+    {
+        $this->image = $image;
+    }
 
     public function __destruct()
     {
