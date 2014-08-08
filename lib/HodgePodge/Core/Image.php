@@ -404,4 +404,58 @@ class Image
                 return $this;
         }
     }
+
+    protected static function calculate_compass($fullx, $fully, $partx, $party, $compass)
+    {
+        switch($compass)
+        {
+            case 'NW':
+                $x = 0;
+                $y = 0;
+            break;
+            
+            case 'N':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = 0;
+            break;
+            
+            case 'NE':
+                $x = $fullx - $partx;
+                $y = 0;
+            break;
+            
+            case 'W':
+                $x = 0;
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'C':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'E':
+                $x = $fullx - $partx;
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'SW':
+                $x = 0;
+                $y = $fully - $party;
+            break;
+            
+            case 'S':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = $fully - $party;
+            break;
+            
+            default:
+                Log::warning('Unknown compass direction ('.$compass.') - SE used' );
+            case 'SE':
+                $x = $fullx - $partx;
+                $y = $fully - $party;
+            break;
+        }
+        return array($x, $y);
+    }
 }
