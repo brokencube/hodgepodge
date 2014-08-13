@@ -6,6 +6,7 @@ class QueryOptions
     protected $sort;
     protected $limit;
     protected $offset;
+    protected $join = [];
     
     public function __get($var)
     {
@@ -23,5 +24,13 @@ class QueryOptions
         $this->limit = intval($limit);
         $this->offset = intval($offset);
         return $this;
+    }
+    
+    public function join($table, $where)
+    {
+        $this->join[] = [
+            'table' => $table,
+            'where' => $where
+        ];
     }
 }

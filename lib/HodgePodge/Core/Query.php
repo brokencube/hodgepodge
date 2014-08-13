@@ -67,9 +67,9 @@ class Query
         return $this->sql($this->createQuery($table, $array, 'update', $where));
     }
     
-    public function select($table, $where = array(), QueryOptions $options = null)
+    public function select($table, $where = array(), QueryOptions $options = null, $columns = '*')
     {
-        return $this->sql($this->createQuery($table, null, 'select', $where, $options));
+        return $this->sql($this->createQuery($table, $columns, 'select', $where, $options));
     }
     
     public function replace($table, $array, $id_column = null)
@@ -166,52 +166,78 @@ class Query
         return $return;
     }
     
-    protected function createQuery($table, $data, $type, $where = array(), QueryOptions $options = null)
+    protected function createQuery($table_alias, $data, $type, $where = array(), QueryOptions $options = null)
     {
+        list($table, $alias) = explode(' ', $table_alias);
+        
         switch($type) {
             // Queries that need building
             case 'count':
-                $query = 'SELECT count(*) as count FROM ' . $table;
+                $query = "SELECT count(*) as count FROM `{$table}`" . ($alias ? " as `{$alias}`" : '');
                 break;
             
             case 'select':
-                $query = 'SELECT * FROM ' . $table;
+                $query = "SELECT $data FROM `{$table}`" . ($alias ? " as `{$alias}`" : '');
                 break;
             
             case 'update':
-                $query = 'UPDATE ' . $table;
+                $query = "UPDATE `{$table}`" . ($alias ? " as `{$alias}`" : '');
                 break;
             
             case 'insert':
-                $query = 'INSERT INTO ' . $table;
+                $query = "INSERT INTO `{$table}`" . ($alias ? " as `{$alias}`" : '');
                 break;
             
             case 'replace':
-                $query = 'INSERT INTO ' . $table;
+                $query = "INSERT INTO `{$table}`" . ($alias ? " as `{$alias}`" : '');
                 $id_column = $where;
                 unset($where);
                 break;
         }
         
+        if ($options && $options->join)
+        {
+            foreach ($options->join as $join)
+            {
+                list($j_table, $j_alias) = explode(' ', $join['table']);
+                $query .= " JOIN `{$j_table}`" . ($j_alias ? " as `{$j_alias}`" : '');
+                $where_array = [];                
+                if ($join['where'] instanceof SqlString) {
+                    $query .= " ON " . (string) $join['where'];
+                } else {
+                    foreach ($join['where'] as $column => $value) {
+                        if (is_int($column) and $value instanceof SqlString) {
+                            $where_array[] = (string) $value;
+                        } else {
+                            $where_array[] = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
+                        }
+                    }
+                    $query .= " ON " . implode("\n AND ", $where_array);
+                }
+            }
+        }
+        
         // Column updates
         if ($type != 'select' and $type != 'count') {
+            $data_array = [];
             if (!$data) throw new Exception\Database('No column data given to create_query', $this);
             foreach ($data as $column => $value) {
-                $data_array[] = $this->createQueryPart($column, $value);
+                $data_array[] = $this->createQueryPart($alias ?: $table, $column, $value);
             }
             $query .= " SET " . implode(",\n", $data_array);
         }
         
         // Where clause
         if ($where) {
+            $where_array = [];
             if ($where instanceof SqlString) {
                 $query .= " WHERE " . (string) $where;
             } else {
                 foreach ($where as $column => $value) {
-                    if ($value instanceof SqlString) {
+                    if (is_int($column) and $value instanceof SqlString) {
                         $where_array[] = (string) $value;
                     } else {
-                        $where_array[] = $this->createQueryPart($column, $value, true);
+                        $where_array[] = $this->createQueryPart($alias ?: $table, $column, $value, true);
                     }
                 }
                 $query .= " WHERE " . implode("\n AND ", $where_array);
@@ -220,10 +246,11 @@ class Query
         
         // Update clause for REPLACE
         if ($type == 'replace') {
+            $update_array = [];
             // Doing a nasty MySQL trick here to keep last_insert_id consistant: see http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html
             $data[$id_column] = new SqlString("LAST_INSERT_ID($id_column)");
             foreach ($data as $column => $value) {
-                $update_array[] = $this->createQueryPart($column, $value);
+                $update_array[] = $this->createQueryPart($alias ?: $table, $column, $value);
             }
             $query .= " ON DUPLICATE KEY UPDATE " . implode(",\n", $update_array);
         }
@@ -240,12 +267,12 @@ class Query
         return $query;
     }
     
-    function createQueryPart($column, $value, $where = false)
+    protected function createQueryPart($table, $column, $value, $where = false)
     {
         // Special case for null where
-        if ($where and is_null($value)) return "`$column` is null";
+        if ($where and is_null($value)) return "`$table`.`$column` is null";
         
-        $col = "`$column` = ";
+        $col = "`$table`.`$column` = ";
         switch (true) {
             case $value instanceof SqlString:
                 return $col . (string) $value;
