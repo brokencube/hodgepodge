@@ -8,40 +8,32 @@ class Collection extends Common\Collection
     public function __get($parameter)
     {
         $list = array();
+        
         foreach($this->container as $item) {
             $value = $item->$parameter;
-            if ($item instanceof Model) {
-                if ($value instanceof Collection) {
-                    $list = array_merge($list, $value->toArray());
-                } else {
-                    $list[] = $value;
-                }
+            if ($value instanceof Collection) {
+                $list = array_merge($list, $value->toArray());
             } else {
                 $list[] = $value;
             }
         }
+        
         return new static($list);
     }
 
     public function __call($name, $arguments)
     {
         $list = array();
+        
         foreach($this->container as $item) {
-            if (!method_exists($item, $name)) {
-                throw new \BadMethodCallException();
-            }
-            
-            $value = call_user_func_array(array($item, $name),$arguments);
-            if ($item instanceof Model) {
-                if ($value instanceof Collection) {
-                    $list = array_merge($list, $value->toArray());
-                } else {
-                    $list[] = $value;
-                }
+            $value = call_user_func_array([$item, $name], $arguments);
+            if ($value instanceof Collection) {
+                $list = array_merge($list, $value->toArray());
             } else {
                 $list[] = $value;
             }
         }
+        
         return new static($list);
     }
 

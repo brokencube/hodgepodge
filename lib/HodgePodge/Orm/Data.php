@@ -2,6 +2,7 @@
 namespace HodgePodge\Orm;
 
 use HodgePodge\Common;
+use HodgePodge\Common\SqlString;
 use HodgePodge\Core;
 use HodgePodge\Exception;
 
@@ -100,21 +101,41 @@ class Data
         if (key_exists($var, (array) $this->model['one-to-many'])) {
             // If this Model_Data isn't linked to the db yet, then linked values cannot exist
             if (!$id = $this->data['id']) return new Collection();
-            
-            $table = $this->model['one-to-many'][$var]['table'];
-            $column = $this->model['one-to-many'][$var]['column_name'];
-            
-            // Use the model factory to find the relevant items
-            $this->external[$var] = Model::factory(array($column => $id), $table, $this->database);
-            
-            return $this->external[$var];
+            return $this->join($var);
         }
         
         /* Search $model['many-to-many'] to see if an appropriate pivot string has been defined */
         if (key_exists($var, (array) $this->model['many-to-many'])) {
             // If this Model_Data isn't linked to the db yet, then linked values cannot exist
             if (!$this->data['id']) return new Collection();
+            return $this->join($var);
+        }
+    }
+
+    public function join($var, array $where = [])
+    {
+        if ($this->external[$var]) return $this->external[$var]->filter($where);
+        
+        /* Look for lists of objects in other tables referencing this one */
+        if (key_exists($var, (array) $this->model['one-to-many'])) {
+            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
+            if (!$id = $this->data['id']) return new Collection();
+
+            $table = $this->model['one-to-many'][$var]['table'];
+            $column = $this->model['one-to-many'][$var]['column_name'];
             
+            // Use the model factory to find the relevant items
+            $results = Model::factory($where + [$column => $id], $table, $this->database);
+            
+            if (empty($where)) $this->external[$var] = $results;
+            
+            return $results;
+        }
+        
+        if (key_exists($var, (array) $this->model['many-to-many'])) {
+            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
+            if (!$id = $this->data['id']) return new Collection();
+
             // Get pivot schema
             $pivot = $this->model['many-to-many'][$var];
             
@@ -125,37 +146,31 @@ class Data
             $pivot_schema = $this->schema->getTable($pivot['pivot']);
             $pivot_tablename = $pivot_schema['table_name'];
             
-            list($raw) = Core\Query::run("Select `{$pivot['connections'][0]['column']}` as id from `{$pivot_tablename}` where `{$pivot['id']}` = {$this->data['id']}", $this->database);    
+            $query = new Core\Query($this->database);
+            $query_options = new Core\QueryOptions;
+            $query_options->join(Schema::underscoreCase($pivot['connections'][0]['table']).' pivotjoin', ['id' => new SqlString('`pivot`.`' . $pivot['connections'][0]['column'].'`')] + $where);
+            
+            $query->select(
+                $pivot_tablename . ' pivot',
+                [$pivot['id'] => $this->data['id']],
+                $query_options,
+                $pivot['connections'][0]['column']
+            );
+            list($raw) = $query->execute();
             
             // Rearrange the list of ids into a flat array
             $id = array();
-            foreach($raw as $raw_id) $id[] = $raw_id['id'];
+            foreach($raw as $raw_id) $id[] = $raw_id[$pivot['connections'][0]['column']];
             
             // Use the model factory to retrieve the objects from the list of ids (using cache first)
-            $this->external[$var] = Model::factoryObjectCache($id, $pivot['connections'][0]['table'], $this->database);
+            $results = Model::factoryObjectCache($id, $pivot['connections'][0]['table'], $this->database);
             
-            return $this->external[$var];
-        }
-    }
-
-    public function join($var, array $where = [])
-    {
-        /* Look for lists of objects in other tables referencing this one */
-        if (key_exists($var, (array) $this->model['one-to-many'])) {
-            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$id = $this->data['id']) return new Collection();
+            if (!$where) $this->external[$var] = $results;
             
-            $table = $this->model['one-to-many'][$var]['table'];
-            $column = $this->model['one-to-many'][$var]['column_name'];
-            
-            // Use the model factory to find the relevant items
-            $results = Model::factory($where + [$column => $id], $table, $this->database);
-            
-            if (empty($where)) $this->external[$var] = $results;
             return $results;
         }
         
-        throw new Exception\Model("MODEL_DATA:UNKNOWN_FOREIGN_PROPERTY", "Tries to run a join function on a property that does not represent a foreign key", $var);
+        throw new Exception\Model("MODEL_DATA:UNKNOWN_FOREIGN_PROPERTY", ['property' => $var, 'data' => $this]);
     }
     
     public function __isset($var)
