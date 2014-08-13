@@ -28,9 +28,9 @@ class Image
         $file = @file_get_contents($filename);
         
         try {
-            $image = new Imagick();
+            $image = new \Imagick();
             $image->readImageBlob($file);
-        } catch (ImagickException $e) {
+        } catch (\ImagickException $e) {
             $image->destroy();
             return false;
         }
@@ -40,6 +40,11 @@ class Image
         } else {
             return false;
         }
+    }
+    
+    public function __construct(\Imagick $image)
+    {
+        $this->image = $image;
     }
 
     public function __destruct()
@@ -164,7 +169,7 @@ class Image
             $degrees += 360;
         }
         
-        $background = new ImagickPixel();
+        $background = new \ImagickPixel();
         $this->image->rotateImage($background, $degrees);
         $background->destroy();
         
@@ -248,7 +253,7 @@ class Image
         $y = $this->image->getImageHeight();
         
         // Make watermark image
-        $watermark = new Imagick();
+        $watermark = new \Imagick();
         $watermark->setFont(self::$config['font']);
         $watermark->setBackgroundColor('transparent');
         $watermark->newPseudoImage(
@@ -296,7 +301,7 @@ class Image
 
     public function addText($text, $x, $y, $fontsize, $colour = 'black')
     {
-        $draw = new ImagickDraw();
+        $draw = new \ImagickDraw();
         $draw->setFillColor($colour);
         $draw->setFont(self::$config['font']);
         $draw->setFontSize($fontsize);
@@ -307,7 +312,7 @@ class Image
 
     public function addTextBox($text, $x1, $y1, $x2, $y2)
     {
-        $textbox = new Imagick();
+        $textbox = new \Imagick();
         $textbox->setFont(self::$config['font']);
         $textbox->setBackgroundColor('transparent');
         $textbox->setGravity(imagick::GRAVITY_CENTER);
@@ -398,5 +403,59 @@ class Image
                 $this->image->modulateImage(97, 100, 100);
                 return $this;
         }
+    }
+
+    protected static function calculateCompass($fullx, $fully, $partx, $party, $compass)
+    {
+        switch($compass)
+        {
+            case 'NW':
+                $x = 0;
+                $y = 0;
+            break;
+            
+            case 'N':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = 0;
+            break;
+            
+            case 'NE':
+                $x = $fullx - $partx;
+                $y = 0;
+            break;
+            
+            case 'W':
+                $x = 0;
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'C':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'E':
+                $x = $fullx - $partx;
+                $y = intval(($fully / 2) - ($party / 2));
+            break;
+            
+            case 'SW':
+                $x = 0;
+                $y = $fully - $party;
+            break;
+            
+            case 'S':
+                $x = intval(($fullx / 2) - ($partx / 2));
+                $y = $fully - $party;
+            break;
+            
+            default:
+                Log::warning('Unknown compass direction ('.$compass.') - SE used' );
+            case 'SE':
+                $x = $fullx - $partx;
+                $y = $fully - $party;
+            break;
+        }
+        return array($x, $y);
     }
 }
