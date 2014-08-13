@@ -138,6 +138,26 @@ class Data
         }
     }
 
+    public function join($var, array $where = [])
+    {
+        /* Look for lists of objects in other tables referencing this one */
+        if (key_exists($var, (array) $this->model['one-to-many'])) {
+            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
+            if (!$id = $this->data['id']) return new Collection();
+            
+            $table = $this->model['one-to-many'][$var]['table'];
+            $column = $this->model['one-to-many'][$var]['column_name'];
+            
+            // Use the model factory to find the relevant items
+            $results = Model::factory($where + [$column => $id], $table, $this->database);
+            
+            if (empty($where)) $this->external[$var] = $results;
+            return $results;
+        }
+        
+        throw new Exception\Model("MODEL_DATA:UNKNOWN_FOREIGN_PROPERTY", "Tries to run a join function on a property that does not represent a foreign key", $var);
+    }
+    
     public function __isset($var)
     {
         // Is it already set in local array?

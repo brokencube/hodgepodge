@@ -244,6 +244,22 @@ class Model implements \JsonSerializable
         return $this->_data->{$var};
     }
     
+    public function __call($var, $args)
+    {
+        try {
+            return $this->join($var, $args[0]);
+        }
+        catch (Exception\Model $e)
+        {
+            throw new \BadMethodCallException("Method does not exist ({$var})", 0, $e);
+        }
+    }
+    
+    public function join($var, $where)
+    {
+        return $this->_data->join($var, $where);
+    }
+    
     public function __isset($var)
     {
         if (property_exists($this, $var)) return true;

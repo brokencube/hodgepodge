@@ -32,5 +32,7 @@ class QueryOptions
             'table' => $table,
             'where' => $where
         ];
+        
+        return $this;
     }
 }
