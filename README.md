@@ -5,8 +5,8 @@ Current dependancies:
 
 Dependancies for specific functionality
 * Memcached or PEAR Cache_Lite (For caching)
-* MySQLi (For database classes)
-* Imagick extension (For image class)
+* MySQLi (For database and ORM functionality)
+* Imagick extension (For image processing class)
 
 Various things still missing from the library - it gets updated as I need new features, or find bugs that are actively affecting me.
 
