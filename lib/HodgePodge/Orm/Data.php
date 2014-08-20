@@ -96,8 +96,8 @@ class Data
         
         /* FOREIGN KEYS */
         if (
-            key_exists($var, (array) $this->model['one-to-one'])
-            or key_exists($var, (array) $this->model['many-to-one'])
+            key_exists($var, (array) $proto->model['one-to-one'])
+            or key_exists($var, (array) $proto->model['many-to-one'])
         ) {
             foreach ($collection as $obj)
             {
@@ -107,25 +107,23 @@ class Data
         }
         
         /* Look for lists of objects in other tables referencing this one */
-        if (key_exists($var, (array) $this->model['one-to-many'])) {
+        if (key_exists($var, (array) $proto->model['one-to-many'])) {
             
-            $table = $this->model['one-to-many'][$var]['table'];
-            $column = $this->model['one-to-many'][$var]['column_name'];
+            $table = $proto->model['one-to-many'][$var]['table'];
+            $column = $proto->model['one-to-many'][$var]['column_name'];
             
             $ids = $collection->id->toArray();
             
             // Use the model factory to find the relevant items
-            $results = Model::factory($where + [$column => $ids], $table, $this->database);
-            
-            if (empty($where)) $this->external[$var] = $results;
+            $results = Model::factory($where + [$column => $ids], $table, $proto->database);
             
             return $results;
         }
         
-        if (key_exists($var, (array) $this->model['many-to-many'])) {
+        if (key_exists($var, (array) $proto->model['many-to-many'])) {
             
             // Get pivot schema
-            $pivot = $this->model['many-to-many'][$var];
+            $pivot = $proto->model['many-to-many'][$var];
             
             $ids = $collection->id->toArray();
             
@@ -133,10 +131,10 @@ class Data
             if (count($pivot['connections']) != 1) throw new Exception\Model('MODEL_DATA:CANNOT_CALL_MULTIPIVOT_AS_PROPERTY', array($var));
             
             // Get a list of ids linked to this object (i.e. the tablename_id stored in the pivot table)
-            $pivot_schema = $this->schema->getTable($pivot['pivot']);
+            $pivot_schema = $proto->schema->getTable($pivot['pivot']);
             $pivot_tablename = $pivot_schema['table_name'];
             
-            $query = new Core\Query($this->database);
+            $query = new Core\Query($proto->database);
             $query_options = new Core\QueryOptions;
             $query_options->join(Schema::underscoreCase($pivot['connections'][0]['table']).' pivotjoin', ['id' => new SqlString('`pivot`.`' . $pivot['connections'][0]['column'].'`')] + $where);
             
@@ -153,9 +151,7 @@ class Data
             foreach($raw as $raw_id) $result_ids[] = $raw_id[$pivot['connections'][0]['column']];
             
             // Use the model factory to retrieve the objects from the list of ids (using cache first)
-            $results = Model::factoryObjectCache($result_ids, $pivot['connections'][0]['table'], $this->database);
-            
-            if (!$where) $this->external[$var] = $results;
+            $results = Model::factoryObjectCache($result_ids, $pivot['connections'][0]['table'], $proto->database);
             
             return $results;
         }        
