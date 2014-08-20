@@ -280,7 +280,10 @@ class Query
             case $value instanceof Orm\Time:
                 return $col . "'" . $value->mysql() . "'";
             
-            case is_int($value) || is_float($value):
+            case is_int($value) || is_bool($value):
+                return $col . intval($value);
+            
+            case is_float($value):
                 return $col . $value;
             
             case is_null($value):
