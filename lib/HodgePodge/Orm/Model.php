@@ -155,7 +155,7 @@ class Model implements \JsonSerializable
             return null;
         }
     }
-        
+    
     // Get data from database from which we can construct Model objects
     final protected static function factoryData($where, $table, $database, Core\QueryOptions $options = null)
     {
@@ -165,7 +165,7 @@ class Model implements \JsonSerializable
                 
         return $data;
     }
-        
+    
     // Return an empty Model_Data object for this class/table so that a new object can be constructed (and a new row entered in the table).
     // For 'foreign' tables, a parent object must be supplied.
     public static function newData(Model $parent_object = null)
@@ -247,17 +247,12 @@ class Model implements \JsonSerializable
     public function __call($var, $args)
     {
         try {
-            return $this->join($var, $args[0]);
+            return $this->_data->join($var, $args[0]);
         }
         catch (Exception\Model $e)
         {
             throw new \BadMethodCallException("Method does not exist ({$var})", 0, $e);
         }
-    }
-    
-    public function join($var, $where)
-    {
-        return $this->_data->join($var, $where);
     }
     
     public function __isset($var)
@@ -312,9 +307,13 @@ class Model implements \JsonSerializable
         return $this;
     }
     
-    final public function data()
+    final public function data($return_original = false)
     {
-        return clone $this->_data;
+        if ($return_original) {
+            return $this->_data;
+        } else {
+            return clone $this->_data;    
+        }
     }
     
     final public function dataUpdate(Data $db)
@@ -324,7 +323,7 @@ class Model implements \JsonSerializable
     
     final public function dataRefresh()
     {
-        list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database); 
+        list($data) = Model::factoryData(array('id' => $this->id), $this->table, $this->database);
         
         // Database data object unique to this object
         $this->_data = new Data($data, $this->table, Schema::get($this->database));

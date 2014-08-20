@@ -130,11 +130,6 @@ class Collection extends Common\Collection
     }
     
     // Merge another array into this collection
-    public function merge($array)
-    {
-        return $this->add($array);
-    }
-    
     public function add($array)
     {
         $copy = $this->container;
@@ -146,31 +141,49 @@ class Collection extends Common\Collection
         
         return new static($copy);
     }
-    
-    // Remove any items in this collection that match the where clause
-    public function remove($where_array)
+
+    public function merge($array)
     {
-        return $this->not($where_array);
+        return $this->add($array);
     }
     
-    public function not($where_array)
+    // Remove any items in this collection that match filter
+    public function not($filter)
     {
         $copy = $this->container;
         
-        // Loop over items
-        foreach ($copy as $item_key => $item) {
-            // Loop over filters
-            foreach ($where_array as $property => $value_list) {
-                // Each filter can have several acceptable values -- force single item to array
-                if (!is_array($value_list)) $value_list = array($value_list);
-                // Check each value - if we find a matching value than remove this item
-                foreach ($value_list as $value) {
-                    if ($item->$property == $value) {
-                        unset($copy[$item_key]);
-                        break 2;
-                    }
-               }    
+        if (is_array($filter))
+        {        
+            // Loop over items
+            foreach ($copy as $item_key => $item) {
+                // Loop over filters
+                foreach ($filter as $property => $value_list) {
+                    // Each filter can have several acceptable values -- force single item to array
+                    if (!is_array($value_list)) $value_list = array($value_list);
+                    // Check each value - if we find a matching value than remove this item
+                    foreach ($value_list as $value) {
+                        if ($item->$property == $value) {
+                            unset($copy[$item_key]);
+                            break 2;
+                        }
+                   }    
+                }
             }
+        }
+        elseif(is_callable($filter))
+        {
+            // Loop over items
+            foreach ($copy as $item_key => $item) {
+                // Use the closure/callback to filter the item
+                if ($filter($item))
+                {
+                    unset($copy[$item_key]);
+                }
+            }            
+        }
+        else
+        {
+            throw new \InvalidArgumentException('Orm\Collection->not() expects an array or callable');
         }
         
         $copy = array_values($copy);
@@ -178,10 +191,16 @@ class Collection extends Common\Collection
         return new static($copy);
     }
 
+    public function remove($filter)
+    {
+        return $this->not($filter);
+    }
+
+    // Only keep items that match filter
     public function filter($filter)
     {
         $copy = $this->container;
-
+        
         if (is_array($filter))
         {        
             // Loop over items
