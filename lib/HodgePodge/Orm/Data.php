@@ -90,7 +90,9 @@ class Data
     
     public static function groupjoin(Collection $collection, $var, $where = [])
     {
-        $proto = $collection[0];
+        if (!$collection->count()) return $collection;
+        
+        $proto = $collection[0]->_data;
         
         $results = new Collection();
         
