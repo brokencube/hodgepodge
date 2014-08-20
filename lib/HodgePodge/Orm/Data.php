@@ -79,10 +79,26 @@ class Data
          * From example at the top: $proj->account_id returns 1      $proj->account returns Account object with id 1
          */
         
+        try {
+            return $this->join($var);
+        }
+        catch (Exception\Model $e) {
+            if ($e->getLabel() == 'MODEL_DATA:UNKNOWN_FOREIGN_PROPERTY') return null;
+            throw $e;
+        }
+    }
+
+    public function join($var, array $where = [])
+    {
+        if ($this->external[$var]) return $this->external[$var]->filter($where);
+
+        // If this Model_Data isn't linked to the db yet, then linked values cannot exist
+        if (!$id = $this->data['id']) return new Collection();
+        
+        /* FOREIGN KEYS */
         if (key_exists($var, (array) $this->model['one-to-one'])) {        
             /* Call Tablename::factory(foreign key id) to get the object we want */
             $table = $this->model['one-to-one'][$var];
-            $id = $this->data['id'];
             $this->external[$var] = Model::factoryObjectCache($id, $table, $this->database);
             
             return $this->external[$var];
@@ -91,36 +107,14 @@ class Data
         if (key_exists($var, (array) $this->model['many-to-one'])) {        
             /* Call Tablename::factory(foreign key id) to get the object we want */
             $table = $this->model['many-to-one'][$var];
-            $id = $this->data[$var . '_id'];
-            $this->external[$var] = Model::factoryObjectCache($id, $table, $this->database);
+            $this->external[$var] = Model::factoryObjectCache($this->data[$var . '_id'], $table, $this->database);
             
             return $this->external[$var];
         }
         
         /* Look for lists of objects in other tables referencing this one */
         if (key_exists($var, (array) $this->model['one-to-many'])) {
-            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$id = $this->data['id']) return new Collection();
-            return $this->join($var);
-        }
-        
-        /* Search $model['many-to-many'] to see if an appropriate pivot string has been defined */
-        if (key_exists($var, (array) $this->model['many-to-many'])) {
-            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$this->data['id']) return new Collection();
-            return $this->join($var);
-        }
-    }
-
-    public function join($var, array $where = [])
-    {
-        if ($this->external[$var]) return $this->external[$var]->filter($where);
-        
-        /* Look for lists of objects in other tables referencing this one */
-        if (key_exists($var, (array) $this->model['one-to-many'])) {
-            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$id = $this->data['id']) return new Collection();
-
+            
             $table = $this->model['one-to-many'][$var]['table'];
             $column = $this->model['one-to-many'][$var]['column_name'];
             
@@ -133,9 +127,7 @@ class Data
         }
         
         if (key_exists($var, (array) $this->model['many-to-many'])) {
-            // If this Model_Data isn't linked to the db yet, then linked values cannot exist
-            if (!$id = $this->data['id']) return new Collection();
-
+            
             // Get pivot schema
             $pivot = $this->model['many-to-many'][$var];
             
