@@ -12,9 +12,11 @@
             "role": "Lead Developer"
         }    
     ],
+    "require": {
+        "php": ">=5.4.0"
+    },
     "suggest": {
-        "rain/raintpl": "Default template engine for HodgePodge/Core/Scribe",
-        "smarty/smarty": "Alternate template engine for HodgePodge/Core/Scribe"
+        "smarty/smarty": "Default template engine for HodgePodge/Core/Scribe"
     },
     "autoload": {    
       "psr-0": { "HodgePodge": "lib" }
