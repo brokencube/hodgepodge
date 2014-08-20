@@ -88,7 +88,7 @@ class Data
         }
     }
     
-    public static function groupjoin(Collection $collection, $var, $where = [])
+    public static function groupJoin(Collection $collection, $var, $where = [])
     {
         if (!$collection->count()) return $collection;
         
@@ -97,14 +97,25 @@ class Data
         $results = new Collection();
         
         /* FOREIGN KEYS */
-        if (
-            key_exists($var, (array) $proto->model['one-to-one'])
-            or key_exists($var, (array) $proto->model['many-to-one'])
-        ) {
-            foreach ($collection as $obj)
-            {
-                $results[] = $obj->join($var, $where);
-            }
+        if (key_exists($var, (array) $proto->model['one-to-one']))
+        {
+            $ids = $collection->id->toArray();
+            
+            /* Call Tablename::factory(foreign key id) to get the object we want */
+            $table = $proto->model['many-to-one'][$var];
+            $results = Model::factoryObjectCache($ids, $table, $proto->database);
+            
+            return $results;
+        }
+        
+        if (key_exists($var, (array) $proto->model['many-to-one']))
+        {
+            $ids = $collection->{$var . '_id'}->toArray();
+            
+            /* Call Tablename::factory(foreign key id) to get the object we want */
+            $table = $proto->model['many-to-one'][$var];
+            $results = Model::factoryObjectCache($ids, $table, $proto->database);
+            
             return $results;
         }
         
@@ -118,6 +129,20 @@ class Data
             
             // Use the model factory to find the relevant items
             $results = Model::factory($where + [$column => $ids], $table, $proto->database);
+            
+            // If we didn't use a filter, store the relevant results in each oboject
+            if (!$where)
+            {
+                foreach($results as $obj)
+                {
+                    $external[$obj->$column][] = $obj;
+                }
+                
+                foreach ($collection as $obj)
+                {
+                    $obj->_data->external[$var] = new Collection((array) $external[$obj->id]);
+                }
+            }
             
             return $results;
         }
@@ -144,16 +169,36 @@ class Data
                 $pivot_tablename . ' pivot',
                 [$pivot['id'] => $ids],
                 $query_options,
-                $pivot['connections'][0]['column']
+                'pivot.*'
             );
             list($raw) = $query->execute();
             
-            // Rearrange the list of ids into a flat array
-            $result_ids = [];
-            foreach($raw as $raw_id) $result_ids[] = $raw_id[$pivot['connections'][0]['column']];
+            // Rearrange the list of ids into a flat array and an id grouped array
+            $flat_ids = [];
+            $grouped_ids = [];
+            foreach($raw as $raw_id)
+            {
+                $flat_ids[] = $raw_id[$pivot['connections'][0]['column']];
+                $grouped_ids[$raw_id[$pivot['id']]][] = $raw_id[$pivot['connections'][0]['column']];
+            }
+            
+            // Remove duplicates to make sql call smaller.
+            $flat_ids = array_unique($flat_ids);
             
             // Use the model factory to retrieve the objects from the list of ids (using cache first)
-            $results = Model::factoryObjectCache($result_ids, $pivot['connections'][0]['table'], $proto->database);
+            $results = Model::factoryObjectCache($flat_ids, $pivot['connections'][0]['table'], $proto->database);
+            
+            // If we don't have a filter ($where), then we can split up the results per object and store the
+            // results relevant to the result on that object. The calls to Model::factoryObjectCache below will never hit the database, because
+            // all of the possible objects were returned in the call above.
+            if (!$where)
+            {
+                foreach ($collection as $obj)
+                {
+                    $data = Model::factoryObjectCache($grouped_ids[$obj->id], $pivot['connections'][0]['table'], $proto->database);
+                    $obj->_data->external[$var] = $data ?: new Collection;
+                }
+            }
             
             return $results;
         }        
@@ -400,5 +445,19 @@ class Data
     public function getDatabase()
     {
         return $this->database;
+    }
+    
+    public function getModel()
+    {
+        return $this->model;
+    }
+    
+    public function externalKeyExists($var)
+    {
+        if (key_exists($var, (array) $this->model['one-to-one'])) return 'one-to-one';
+        if (key_exists($var, (array) $this->model['one-to-many'])) return 'one-to-many';
+        if (key_exists($var, (array) $this->model['many-to-one'])) return 'many-to-one';
+        if (key_exists($var, (array) $this->model['many-to-many'])) return 'many-to-many';
+        return null;
     }
 }

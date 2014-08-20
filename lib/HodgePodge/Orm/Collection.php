@@ -9,6 +9,11 @@ class Collection extends Common\Collection
     {
         $list = array();
         
+        if ($this->container[0] instanceof Model and $this->container[0]->_data->externalKeyExists($parameter))
+        {
+            return Data::groupJoin($this, $parameter);
+        }
+        
         foreach($this->container as $item) {
             $value = $item->$parameter;
             if ($value instanceof Collection) {
@@ -24,6 +29,15 @@ class Collection extends Common\Collection
     public function __call($name, $arguments)
     {
         $list = array();
+        
+        if (
+            $this->container[0] instanceof Model
+            and !method_exists($this->container[0], $name)
+            and $this->container[0]->_data->externalKeyExists($parameter)
+        )
+        {
+            return Data::groupJoin($this, $name, $arguments);
+        }
         
         foreach($this->container as $item) {
             $value = call_user_func_array([$item, $name], $arguments);
