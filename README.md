@@ -1,11 +1,13 @@
-New home of my personal microframework + ORM
+New home of my personal microframework 
+
+Currently it also contains a copy of my ORM [Automatorm](https://github.com/brokencube/automatorm), that I have recently pulled out as it's own repo.
 
 Current dependancies:
 * PHP 5.4
 
 Dependancies for specific functionality
 * Memcached or PEAR Cache_Lite (For caching)
-* MySQLi (For database and ORM functionality)
+* MySQLi (For database functionality)
 * Imagick extension (For image processing class)
 
 Various things still missing from the library - it gets updated as I need new features, or find bugs that are actively affecting me.
