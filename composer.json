@@ -1,6 +1,6 @@
 {
     "name": "brokencube/hodgepodge",
-    "description": "Personal web framework with schema-led ORM",
+    "description": "Personal utility libraries/mini-framework",
     "type": "library",
     "keywords": ["Random", "Utility"],
     "license": "MIT",
