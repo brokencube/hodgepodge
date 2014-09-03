@@ -2,7 +2,6 @@
 namespace HodgePodge\Core;
 
 use HodgePodge\Exception;
-use HodgePodge\Orm;
 use HodgePodge\Common\SqlString;
 
 class Query
@@ -276,9 +275,6 @@ class Query
         switch (true) {
             case $value instanceof SqlString:
                 return $col . (string) $value;
-            
-            case $value instanceof Orm\Time:
-                return $col . "'" . $value->mysql() . "'";
             
             case is_int($value) || is_bool($value):
                 return $col . intval($value);
