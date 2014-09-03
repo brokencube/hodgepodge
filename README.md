@@ -1,7 +1,5 @@
 New home of my personal microframework 
 
-Currently it also contains a copy of my ORM [Automatorm](https://github.com/brokencube/automatorm), that I have recently pulled out as it's own repo.
-
 Current dependancies:
 * PHP 5.4
 
