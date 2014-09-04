@@ -205,11 +205,7 @@ class Query
                     $query .= " ON " . (string) $join['where'];
                 } else {
                     foreach ($join['where'] as $column => $value) {
-                        if (is_int($column) and $value instanceof SqlString) {
-                            $where_array[] = (string) $value;
-                        } else {
-                            $where_array[] = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
-                        }
+                        $where_array[] = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
                     }
                     $query .= " ON " . implode("\n AND ", $where_array);
                 }
@@ -233,11 +229,7 @@ class Query
                 $query .= " WHERE " . (string) $where;
             } else {
                 foreach ($where as $column => $value) {
-                    if (is_int($column) and $value instanceof SqlString) {
-                        $where_array[] = (string) $value;
-                    } else {
-                        $where_array[] = $this->createQueryPart($alias ?: $table, $column, $value, true);
-                    }
+                    $where_array[] = $this->createQueryPart($alias ?: $table, $column, $value, true);
                 }
                 $query .= " WHERE " . implode("\n AND ", $where_array);
             }
@@ -268,10 +260,33 @@ class Query
     
     protected function createQueryPart($table, $column, $value, $where = false)
     {
-        // Special case for null where
-        if ($where and is_null($value)) return "`$table`.`$column` is null";
+        if (is_int($column) and $value instanceof SqlString)
+        {
+            return (string) $value;
+        }
         
-        $col = "`$table`.`$column` = ";
+        $comparitor = '=';
+        if ($where)
+        {
+            preg_match('/^([^a-zA-Z0-9]*)[a-zA-Z0-9]/', $column, $prefix);
+            $prefix = $prefix[1];
+            
+            // Special cases for null values in where clause
+            if ($prefix == '!' and is_null($value)) return "`$table`.`$column` is not null";
+            if (is_null($value)) return "`$table`.`$column` is null";
+            
+            switch ($prefix) {
+                case '=': $comparitor = '='; break;
+                case '!': $comparitor = '!='; break;
+                case '!=': $comparitor = '!='; break;
+                case '>': $comparitor = '>'; break;
+                case '<': $comparitor = '<'; break;
+                case '>=': $comparitor = '>='; break;
+                case '<=': $comparitor = '<='; break;
+            }
+        }
+        
+        $col = "`$table`.`$column` $comparitor ";
         switch (true) {
             case $value instanceof SqlString:
                 return $col . (string) $value;
