@@ -271,6 +271,9 @@ class Query
             preg_match('/^([^a-zA-Z0-9]*)[a-zA-Z0-9]/', $column, $prefix);
             $prefix = $prefix[1];
             
+            // Strip any prefix off the front of the column name
+            $column = substr($column, strlen($prefix));
+            
             // Special cases for null values in where clause
             if ($prefix == '!' and is_null($value)) return "`$table`.`$column` is not null";
             if (is_null($value)) return "`$table`.`$column` is null";
