@@ -1,6 +1,8 @@
 <?php
 namespace HodgePodge\Core;
 
+use HodgePodge\Exception\HTTP;
+
 class Router
 {
     protected static $root;                         // Base_dir for this application
@@ -57,13 +59,13 @@ class Router
             // Could not find a file to include
             if (!$continue_path_traversal) {
                 // We did not detected a deeper matching directory we could traverse into. Bail out!
-                throw new HodgePodge\Exception\HTTP\NotFound();
+                throw new HTTP\NotFound();
             }
             
         } while (count(static::$parts));
         
         // Could not find a page to route to - throw exception
-        throw new HodgePodge\Exception\HTTP\NotFound();
+        throw new HTTP\NotFound();
     }
     
     public static function args()
