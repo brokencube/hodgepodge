@@ -46,9 +46,7 @@ class Router
                     
                 // If file exists, then include controller and return.
                 if(file_exists($path . static::$extension)) {
-                    static::$filename = $path . static::$extension;
-                    require_once(static::$filename);
-                    return true;
+                    return static::$filename = $path . static::$extension;
                 }
                 
                 if(is_dir($path)) {
