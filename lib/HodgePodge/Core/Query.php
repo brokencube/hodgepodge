@@ -304,18 +304,38 @@ class Query
                 return $col . 'null';
             
             case is_array($value):
-                foreach($value as $var) {
-                    switch(true) {
-                        case is_int($var) || is_float($var):
-                            $in[] = (string) $var;
-                            break;
-                        
-                        case is_string($var):
-                            $in[] = "'".  Database::escape($var, $this->name). "'";
-                            break;
+                if ($prefix == '!')
+                {
+                    if (is_empty($value)) return 'true';
+                    foreach($value as $var) {
+                        switch(true) {
+                            case is_int($var) || is_float($var):
+                                $in[] = (string) $var;
+                                break;
+                            
+                            case is_string($var):
+                                $in[] = "'".  Database::escape($var, $this->name). "'";
+                                break;
+                        }
                     }
+                    return "`$column` not in (" . implode(", ", $in) . ")";
                 }
-                return "`$column` in (" . implode(", ", $in) . ")";
+                else
+                {
+                    if (is_empty($value)) return 'false';
+                    foreach($value as $var) {
+                        switch(true) {
+                            case is_int($var) || is_float($var):
+                                $in[] = (string) $var;
+                                break;
+                            
+                            case is_string($var):
+                                $in[] = "'".  Database::escape($var, $this->name). "'";
+                                break;
+                        }
+                    }
+                    return "`$column` in (" . implode(", ", $in) . ")";
+                }
             
             default:
                 return $col . "'" . Database::escape((string) $value, $this->name) . "'";
