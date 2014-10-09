@@ -306,7 +306,7 @@ class Query
             case is_array($value):
                 if ($prefix == '!')
                 {
-                    if (is_empty($value)) return 'true';
+                    if (empty($value)) return 'true';
                     foreach($value as $var) {
                         switch(true) {
                             case is_int($var) || is_float($var):
@@ -322,7 +322,7 @@ class Query
                 }
                 else
                 {
-                    if (is_empty($value)) return 'false';
+                    if (empty($value)) return 'false';
                     foreach($value as $var) {
                         switch(true) {
                             case is_int($var) || is_float($var):
