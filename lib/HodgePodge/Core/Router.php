@@ -81,8 +81,8 @@ class Router
     public static function clean($url)
     {
         $string = str_replace(
-            array('&', '/', '\\', "'", '"', ':', '#', '@', '?', ','),
-            array('and', ' ', ' '),
+            array('&', '%', '/', '\\', "'", '"', ':', '#', '@', '?', ','),
+            array('and', '%25', ' '),
             $url
         );
         
