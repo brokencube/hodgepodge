@@ -215,7 +215,7 @@ class Query
         // Column updates
         if ($type != 'select' and $type != 'count') {
             $data_array = [];
-            if (!$data) throw new Exception\Database('No column data given to create_query', $this);
+            if (!$data) throw new Exception\Database('NO_COLUMN_DATA', 'No column data given to create_query', $this);
             foreach ($data as $column => $value) {
                 $data_array[] = $this->createQueryPart($alias ?: $table, $column, $value);
             }
