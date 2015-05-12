@@ -6,7 +6,7 @@ class Generic extends \RuntimeException
 	protected $label;   // A codeword for easy exception recognition
 	protected $data;    // Any data associated with the exception (e.g parameters that caused the exception)
 
-	public function __construct($label = 'LABEL_NOT_SET', $message = null, $data = null, \Exception $previous_exception = null)
+	public function __construct($label = 'LABEL_NOT_SET', $message = '', $data = null, \Exception $previous_exception = null)
 	{
 		$this->label = $label;
 		
