@@ -16,7 +16,7 @@ class Memcached implements Interfaces\Cache
         global $config;
         
         $this->id = $id;
-        $this->group = is_null($group) ? $group : 'default';
+        $this->group = is_null($group) ? 'default' : $group;
         $this->key = 'HodgePodge:Cache:' . $this->group . ':' . $this->id;
         
         list($server, $port) = explode(':', $config['memcache']['url']);
