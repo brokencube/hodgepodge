@@ -40,14 +40,14 @@ class Log
         static::get()->disable($off);
     }
     
-    public function isDisabled()
+    public static function isOff()
     {
         return static::get()->disabled;
     }
     
     /*****************************************************/
     
-    protected $disabled = false;
+    public $disabled = false;
     protected $log = [];
     
     // Output on script end.
