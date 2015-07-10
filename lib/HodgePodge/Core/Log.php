@@ -27,12 +27,12 @@ class Log
     /* Options */
 
     /*****************************************************/
-    public static $log;
+    public static $singleton;
 
     public static function get()
     {
         // Return Log::$log - if it doesn't exists, stick a new Log object in it.
-        return static::$log ?: (static::$log = new static());
+        return static::$singleton ?: (static::$singleton = new static());
     }
     
     public static function off($off = true)
@@ -40,9 +40,15 @@ class Log
         static::get()->disable($off);
     }
     
+    public function isDisabled()
+    {
+        return static::get()->disabled;
+    }
+    
     /*****************************************************/
     
     protected $disabled = false;
+    protected $log = [];
     
     // Output on script end.
     public function __destruct()
