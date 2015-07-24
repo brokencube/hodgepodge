@@ -33,6 +33,7 @@ class Database implements \SessionHandlerInterface
     public function read($id)
     {
         $query = new Query($this->dbconnection);
+        $query->transaction();
         $query->sql("
             SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."'
         ");
@@ -55,6 +56,7 @@ class Database implements \SessionHandlerInterface
                 expiry = '".(time() + $this->expiry)."'
         ");
         $query->execute();
+        $query->commit();
     }
     
     public function destroy($id)
@@ -64,6 +66,7 @@ class Database implements \SessionHandlerInterface
             Delete from `".static::$tablename."` where id = '".$query->escape($id)."'
         ");
         $query->execute();
+        $query->commit();
     }
     
     public function gc($maxlifetime)

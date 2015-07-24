@@ -98,7 +98,20 @@ class Query
         return $this->mysql->real_escape_string($string);
     }
     
-    public function execute($transaction = false)
+    public function transaction()
+    {
+        $this->mysql->autocommit(false);
+        $this->mysql->begin_transaction();
+    }
+
+    
+    public function commit()
+    {
+        $this->mysql->commit();
+        $this->mysql->autocommit(true);
+    }
+    
+    public function execute()
     {
         // We are only allowed to execute each Query object once!
         if ($this->lock) throw new Exception\Database('QUERY_LOCKED', "This query has already been executed", $this);
@@ -107,9 +120,6 @@ class Query
         // Start timing query
         $total_time = microtime(true);
         
-        // Set transaction mode
-        $this->mysql->autocommit(!$transaction);
-                
         $count = 0;
         foreach($this->sql as $query) {
             // Do the database query
@@ -155,12 +165,9 @@ class Query
 
         // If we had an error, throw and exception.
         if ($this->debug['error']) {
-            if ($transaction) $this->mysql->rollback();
             throw new Exception\Query($this);
         }
         
-        if ($transaction) $this->mysql->commit();
-                
         // Finally, return the results of the query
         return $return;
     }
