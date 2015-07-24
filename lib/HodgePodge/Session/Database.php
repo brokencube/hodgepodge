@@ -35,7 +35,7 @@ class Database implements \SessionHandlerInterface
         $query = new Query($this->dbconnection);
         $query->transaction();
         $query->sql("
-            SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."'
+            SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."' FOR UPDATE
         ");
         list(list($row)) = $query->execute();
         

@@ -100,10 +100,11 @@ class Query
     
     public function transaction()
     {
+        $this->mysql->real_query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+        $result = $this->mysql->store_result();
+        if ($result) $result->close();
         $this->mysql->autocommit(false);
-        $this->mysql->begin_transaction();
     }
-
     
     public function commit()
     {
