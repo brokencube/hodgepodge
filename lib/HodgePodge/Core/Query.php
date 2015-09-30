@@ -276,15 +276,19 @@ class Query
         $comparitor = '=';
         if ($where)
         {
-            preg_match('/^([^a-zA-Z0-9]*)[a-zA-Z0-9]/', $column, $prefix);
-            $prefix = $prefix[1];
+            preg_match('/^([!=<>]*)([^!=<>]+)([!=<>]*)$/', $column, $parts);
+            $prefix = $parts[1] ?: $parts[3];
+            $column = $parts[2];
             
-            // Strip any prefix off the front of the column name
-            $column = substr($column, strlen($prefix));
+            preg_match('/^`([a-zA-Z0-9]+)`\.`?[a-zA-Z0-9]+`?$/', $column, $fullyqualified);
+            if (!$fullyqualified[1])
+            {
+                $column = "`$table`.`$column`";
+            }
             
             // Special cases for null values in where clause
-            if ($prefix == '!' and is_null($value)) return "`$table`.`$column` is not null";
-            if (is_null($value)) return "`$table`.`$column` is null";
+            if ($prefix == '!' and is_null($value)) return "$column is not null";
+            if (is_null($value)) return "$column is null";
             
             switch ($prefix) {
                 case '=': $comparitor = '='; break;
@@ -296,8 +300,12 @@ class Query
                 case '<=': $comparitor = '<='; break;
             }
         }
+        else
+        {
+            $column = "`$table`.`$column`";
+        }
         
-        $col = "`$table`.`$column` $comparitor ";
+        $col = "$column $comparitor ";
         switch (true) {
             case $value instanceof SqlString:
                 return $col . (string) $value;
@@ -326,7 +334,7 @@ class Query
                                 break;
                         }
                     }
-                    return "`$column` not in (" . implode(", ", $in) . ")";
+                    return "$column not in (" . implode(", ", $in) . ")";
                 }
                 else
                 {
@@ -342,7 +350,7 @@ class Query
                                 break;
                         }
                     }
-                    return "`$column` in (" . implode(", ", $in) . ")";
+                    return "$column in (" . implode(", ", $in) . ")";
                 }
             
             default:
