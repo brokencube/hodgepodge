@@ -280,7 +280,7 @@ class Query
             $prefix = $parts[1] ?: $parts[3];
             $column = $parts[2];
             
-            preg_match('/^`([a-zA-Z0-9]+)`\.`?[a-zA-Z0-9]+`?$/', $column, $fullyqualified);
+            preg_match('/^`(.+?)`\.`?(.+?)`?$/', $column, $fullyqualified);
             if (!$fullyqualified[1])
             {
                 $column = "`$table`.`$column`";
