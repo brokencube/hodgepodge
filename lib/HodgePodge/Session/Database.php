@@ -2,6 +2,7 @@
 namespace HodgePodge\Session;
 
 use HodgePodge\Core\Query;
+use HodgePodge\Exception;
 
 class Database implements \SessionHandlerInterface
 {
@@ -11,6 +12,7 @@ class Database implements \SessionHandlerInterface
 
     protected $expiry;
     protected $initialRead;
+    protected $session_broken = false;
 
     public function __construct($expiry = 2592000) // 60*60*24*30
     {
@@ -32,49 +34,89 @@ class Database implements \SessionHandlerInterface
     
     public function read($id)
     {
-        $query = new Query($this->dbconnection);
-        $query->transaction();
-        $query->sql("
-            SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."' FOR UPDATE
-        ");
-        list(list($row)) = $query->execute();
-        
-        // If not expired, get sessiondata
-        if ($row['expiry'] > time()) {
-            $data = $row['sessiondata'];
+        if (!$this->session_broken)
+        {
+            try {
+                $query = new Query($this->dbconnection);
+                $query->transaction();
+                $query->sql("
+                    SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."' FOR UPDATE
+                ");
+                list(list($row)) = $query->execute();
+            }
+            catch (Exception\Query $e)
+            {
+                $this->session_broken = true;
+                throw new Exception\Session('READ', $e);
+            }
+            
+            // If not expired, get sessiondata
+            if ($row['expiry'] > time()) {
+                $data = $row['sessiondata'];
+            }
+            return $data;
         }
-        return $data;
     }
     
     public function write($id, $data)
     {
-        $query = new Query($this->dbconnection);
-        $query->sql("
-            REPLACE INTO `".static::$tablename."` SET
-                id = '".$query->escape($id)."',
-                sessiondata = '".$query->escape($data)."',
-                expiry = '".(time() + $this->expiry)."'
-        ");
-        $query->execute();
-        $query->commit();
+        if (!$this->session_broken)
+        {
+            try {
+                $query = new Query($this->dbconnection);
+                $query->sql("
+                    REPLACE INTO `".static::$tablename."` SET
+                        id = '".$query->escape($id)."',
+                        sessiondata = '".$query->escape($data)."',
+                        expiry = '".(time() + $this->expiry)."'
+                ");
+                $query->execute();
+                $query->commit();
+            }
+            catch (\HodgePodge\Exception\Query $e)
+            {
+                $this->session_broken = true;
+                throw new Exception\Session('WRITE', $e);
+            }
+        }
     }
     
     public function destroy($id)
     {
-        $query = new Query($this->dbconnection);
-        $query->sql("
-            Delete from `".static::$tablename."` where id = '".$query->escape($id)."'
-        ");
-        $query->execute();
-        $query->commit();
+        if (!$this->session_broken)
+        {
+            try {
+                $query = new Query($this->dbconnection);
+                $query->sql("
+                    Delete from `".static::$tablename."` where id = '".$query->escape($id)."'
+                ");
+                $query->execute();
+                $query->commit();
+            }
+            catch (\HodgePodge\Exception\Query $e)
+            {
+                $this->session_broken = true;
+                throw new Exception\Session('DESTROY', $e);
+            }
+        }
     }
     
     public function gc($maxlifetime)
     {
-        $query = new Query($this->dbconnection);
-        $query->sql("
-            Delete from `".static::$tablename."` where expiry < '".time()."'
-        ");
-        $query->execute();
+        if (!$this->session_broken)
+        {
+            try {
+                $query = new Query($this->dbconnection);
+                $query->sql("
+                    Delete from `".static::$tablename."` where expiry < '".time()."'
+                ");
+                $query->execute();
+            }
+            catch (\HodgePodge\Exception\Query $e)
+            {
+                $this->session_broken = true;
+                throw new Exception\Session('GC', $e);
+            }
+        }
     }
 }
