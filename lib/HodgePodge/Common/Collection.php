@@ -67,11 +67,11 @@ abstract class Collection implements \ArrayAccess, \Iterator, \Countable, \JsonS
     
     public function first()
     {
-        return reset(array_slice($this->container, 0, 1));
+        return array_pop(array_slice($this->container, 0, 1));
     }
 
     public function last()
     {
-        return reset(array_slice($this->container, count($this->container) - 1, 1));
+        return array_pop(array_slice($this->container, count($this->container) - 1, 1));
     }
 }
