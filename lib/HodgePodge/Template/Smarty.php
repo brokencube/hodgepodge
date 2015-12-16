@@ -30,10 +30,10 @@ class Smarty extends \Smarty implements Templater
         
         parent::__construct();
         
-        $this->template_dir = ROOT.'/templates';
-        $this->compile_dir  = ROOT.'/templates_c';
-        $this->config_dir   = ROOT.'/config';
-        $this->cache_dir    = ROOT.'/cache';
+        $this->setTemplateDir(ROOT.'/templates');
+        $this->setCompileDir(ROOT.'/templates_c');
+        $this->setConfigDir(ROOT.'/config');
+        $this->setCacheDir(ROOT.'/cache');
         
         $this->registerPlugin('modifier', 'currency', array('\\HodgePodge\\Template\\Smarty', 'smartyModifierCurrency'));
         $this->registerPlugin('modifier', 'safe', array('\\HodgePodge\\Template\\Smarty', 'smartyModifierSafe'));
