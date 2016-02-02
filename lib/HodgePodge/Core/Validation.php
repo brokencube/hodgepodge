@@ -91,6 +91,15 @@ class Validation
         return $this;
     }
     
+    public function callback(callable $callable, $message = 'Additional verification failed')
+    {
+        if (!$callable($this->source[$this->current]))
+        {
+            $this->errors[$this->current] = $message;
+        }
+        return $this;
+    }
+    
     public function error()
     {    
         return current(array_slice($this->errors,0,1));
