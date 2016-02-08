@@ -113,7 +113,7 @@ class Env
         );
         
         $this->bot = preg_match(
-            '/(Exabot|AhrefsBot|Googlebot|MegaIndex|YandexBot|Yahoo\! Slurp|Domain Re-Animator Bot|Baiduspider|bingbot|QuerySeekerSpider)/i',
+            '/(MJ12bot|trendictionbot|Exabot|AhrefsBot|Googlebot|MegaIndex|YandexBot|Yahoo\! Slurp|Domain Re-Animator Bot|Baiduspider|bingbot|QuerySeekerSpider)/i',
             $_SERVER['HTTP_USER_AGENT']
         );
         
