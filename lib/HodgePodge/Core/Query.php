@@ -4,15 +4,20 @@ namespace HodgePodge\Core;
 use HodgePodge\Exception;
 use HodgePodge\Common\SqlString;
 
-class Query
+class Query implements \Psr\Log\LoggerAwareInterface
 {
     protected $name;    // Name of the connection
     protected $mysql;     // Connection object
     
     protected $sql = array(); // Array of SQL queries to run
     protected $lock = false;
-    
     protected $debug;
+
+    protected $logger;
+    public function setLogger(\Psr\Log\LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
     
     // Readonly access to object properties
     public function __get($var) {
@@ -46,6 +51,9 @@ class Query
         }
         $this->name = $connection_name;
         if ($sql) $this->sql($sql);
+        
+        // Default Logger
+        $this->setLogger(Log::get());
     }
     
     // Add arbitary SQL to the query queue
@@ -161,8 +169,8 @@ class Query
         $this->debug['total_time'] = microtime(true) - $total_time;
         $this->debug['count'] = $count;
 
-        // Log the query with Log::
-        Log::get()->logQuery($this);
+        // Log the query with Psr3 Logger
+        $this->logQuery($this);
 
         // If we had an error, throw and exception.
         if ($this->debug['error']) {
@@ -357,5 +365,24 @@ class Query
                 return $col . "'" . Database::escape((string) $value, $this->name) . "'";
         }
         return $part;
+    }
+
+    public function logQuery(Query $query)
+    {
+        if ($this->disabled) return;
+        
+        $time = number_format($query->debug['total_time'] * 1000, 2);
+        $queries = $query->debug['count'] == 1 ? '1 QUERY' : $query->debug['count'] . " QUERIES";
+        $preview = Log::format(substr(implode(' ', $query->sql),0,100),true);
+        $message = "{$time}ms Con:{$query->name} | {$queries}: $preview";
+        
+        $this->logger->notice(
+            $message,
+            [
+                'query' => $query->sql,
+                'error' => $query->error,
+                'debug' => $query->debug
+            ]
+        );
     }
 }

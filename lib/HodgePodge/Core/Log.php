@@ -1,27 +1,74 @@
 <?php
 namespace HodgePodge\Core;
 
-class Log
+class Log implements \Psr\Log\LoggerInterface
 {
     /* Quick shortcut functions for quick and easy logging. */
-    public static function debug($message, $level = 1)
+    public function emergency($message, array $context = [])
     {
-        self::get()->log('d', $message);
+        return $this->log(\Psr\Log\LogLevel::EMERGENCY, $message, $context);
+    }
+
+    public function alert($message, array $context = [])
+    {
+        return $this->log(\Psr\Log\LogLevel::ALERT, $message, $context);
+    }
+
+    public function critical($message, array $context = [])
+    {
+        return $this->log(\Psr\Log\LogLevel::CRITICAL, $message, $context);
+    }
+
+    public function error($message, array $context = [])
+    {
+        return $this->log(\Psr\Log\LogLevel::ERROR, $message, $context);
     }
     
-    public static function notice($message, $level = 1)
+    public function warning($message, array $context = [])
     {
-        self::get()->log('n', $message);
+        return $this->log(\Psr\Log\LogLevel::WARNING, $message, $context);
     }
     
-    public static function warning($message, $level = 1)
+    public function notice($message, array $context = [])
     {
-        self::get()->log('w', $message);
+        return $this->log(\Psr\Log\LogLevel::NOTICE, $message, $context);
     }
     
-    public static function error($message, $level = 1)
+    public function info($message, array $context = [])
     {
-        self::get()->log('e', $message);
+        return $this->log(\Psr\Log\LogLevel::INFO, $message, $context);
+    }
+    
+    public function debug($message, array $context = [])
+    {
+        return $this->log(\Psr\Log\LogLevel::DEBUG, $message, $context);
+    }
+
+    protected $log = [];
+    public function log($level, $message, array $context = [])
+    {
+        if ($this->disabled) return;
+        
+        switch($level)
+        {
+            case \Psr\Log\LogLevel::EMERGENCY:
+            case \Psr\Log\LogLevel::ALERT:
+            case \Psr\Log\LogLevel::CRITICAL:
+            case \Psr\Log\LogLevel::ERROR:
+            case \Psr\Log\LogLevel::WARNING:
+            case \Psr\Log\LogLevel::NOTICE:
+            case \Psr\Log\LogLevel::INFO:
+            case \Psr\Log\LogLevel::DEBUG:
+                $this->log[] = [
+                    'level' => $level,
+                    'message' => $message,
+                    'context' => $context
+                ];
+                break;
+                
+            default:
+                throw new \Psr\Log\InvalidArgumentException();
+        }
     }
     
     /* Options */
@@ -48,8 +95,7 @@ class Log
     /*****************************************************/
     
     public $disabled = false;
-    protected $log = [];
-    
+
     // Output on script end.
     public function __destruct()
     {
@@ -68,48 +114,21 @@ class Log
         switch(func_num_args())
         {
             case 0:
-                return $this->log('log', 'blank message logged');
+                return $this->log(\Psr\Log\LogLevel::DEBUG, 'blank message logged');
             
             case 1:
                 if (func_get_arg(0) instanceof Query) {
                     return $this->logQuery(func_get_arg(0));
                 }
-                return $this->log('log', func_get_arg(0));
+                return $this->log(\Psr\Log\LogLevel::NOTICE, func_get_arg(0));
             
             case 2:
-            default:
                 return $this->log(func_get_arg(0), func_get_arg(1));
+            
+            case 3:
+            default:
+                return $this->log(func_get_arg(0), func_get_arg(1), func_get_arg(2));
         }
-    }
-
-    public function log($level, $message)
-    {
-        if ($this->disabled) return;
-        
-        $log = array(
-            'level' => $this->determineLevel($level),
-            'message' => $message,
-            'debug' => $debug
-        );
-        
-        $this->log[] = $log;
-    }
-
-    public function logQuery(Query $query)
-    {
-        if ($this->disabled) return;
-        
-        $time = number_format($query->debug['total_time'] * 1000, 2);
-        $queries = $query->debug['count'] == 1 ? '1 QUERY' : $query->debug['count'] . " QUERIES";
-        $con = "Con:".$query->name;
-        $preview = static::format(substr(implode(' ', $query->sql),0,100),true);
-        
-        $log['header'] = "{$time}ms {$con} | {$queries}: $preview";
-        $log['error'] = $query->error;
-        $log['debug'] = $query->debug;        
-        $log['query'] = $query->sql;
-        
-        $this->log[] = $log;        
     }
 
     public function output()
@@ -138,13 +157,13 @@ class Log
     {
         if ($this->log) {
             foreach($this->log as $log) {
-                if(!$log['query']) {
-                    $array[] = "console.".$log['level']."('" . static::format($log['message']) . "');";
+                if(!$log['context']['query']) {
+                    $array[] = "console.".$this->jsLevel($log['level'])."('" . static::format($log['message']) . "');";
                 } else {
                     // Collect stats about queries, but don't log to screen yet
                     $query_count++;
-                    $query_time += $log['debug']['total_time'];
-                    $query_errors += $log['error'] ? 1 : 0;
+                    $query_time += $log['context']['debug']['total_time'];
+                    $query_errors += $log['context']['error'] ? 1 : 0;
                 }
             }
             $query_time = number_format($query_time, 4);
@@ -154,12 +173,12 @@ class Log
                 $array[] = "console.groupCollapsed('QUERIES: {$query_count} queries in {$query_time}s with {$query_errors} errors');";
                 
                 foreach($this->log as $log) {
-                    if($log['query']) {
-                        if ($log['error']) $log['header'] = '[ERROR] ' . $log['header'];
-                        $message = "console.groupCollapsed('{$log['header']}');\n";
-                        if ($log['error']) $message .=  "console.error('".Log::format($log['error'])."');\n";
+                    if($log['context']['query']) {
+                        if ($log['context']['error']) $log['message'] = '[ERROR] ' . $log['message'];
+                        $message = "console.groupCollapsed('{$log['message']}');\n";
+                        if ($log['context']['error']) $message .=  "console.error('".Log::format($log['context']['error'])."');\n";
                         
-                        foreach($log['query'] as $q) {
+                        foreach($log['context']['query'] as $q) {
                             $message .= "console.log('".Log::format($q)."');\n";
                         }
                         $message .=  "console.groupEnd();\n";
@@ -170,13 +189,13 @@ class Log
                 $array[] = "console.groupEnd();\n";
             }
             
-            $output = array(
+            $output = [
                 'script' => $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
                 'messages' => $array    
-            );            
+            ];
         }
         
-        $this->log = array();
+        $this->log = [];
         
         return $output;
     }
@@ -189,23 +208,20 @@ class Log
         return str_replace(array("\n", "\r"), array('\n', '\r'), addslashes($data));
     }
 
-    protected function determineLevel($string)
+    protected function jsLevel($level)
     {
-        switch (strtolower(substr($string,0,1))) {
-            case 'e': // error
-            case 'f': // fatal error
+        switch ($level) {
+            case \Psr\Log\LogLevel::EMERGENCY:
+            case \Psr\Log\LogLevel::ALERT:
+            case \Psr\Log\LogLevel::CRITICAL:
+            case \Psr\Log\LogLevel::ERROR:
                 return 'error';
-            
-            case 'w': // warning
+            case \Psr\Log\LogLevel::WARNING:
                 return 'warn';
-            
-            case 'd': // debug
-            case 'l': // log
-            default:
+            case \Psr\Log\LogLevel::NOTICE:
                 return 'log';
-            
-            case 'n': // notice
-            case 'i': // info
+            case \Psr\Log\LogLevel::INFO:
+            case \Psr\Log\LogLevel::DEBUG:
                 return 'info';            
         }
     }

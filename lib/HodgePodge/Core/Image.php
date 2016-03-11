@@ -185,7 +185,7 @@ class Image
         }
         
         if (!$watermark) {
-            Log::error('Watermark image is invalid');
+            Log::get()->error('Watermark image is invalid');
             return $this;
         }
         
@@ -280,7 +280,7 @@ class Image
                 break;
             
             default:
-                Log::warning('Unknown text watermark compass direction ('.$compass.') - C used');
+                Log::get()->warning('Unknown text watermark compass direction ('.$compass.') - C used');
                 // no break - default to center
             case 'NW-SE':
             case 'SW-NE':
@@ -450,7 +450,7 @@ class Image
             break;
             
             default:
-                Log::warning('Unknown compass direction ('.$compass.') - SE used' );
+                Log::get()->warning('Unknown compass direction ('.$compass.') - SE used' );
             case 'SE':
                 $x = $fullx - $partx;
                 $y = $fully - $party;
