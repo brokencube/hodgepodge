@@ -56,16 +56,18 @@ class Image
 
     public function __clone()
     {
-        $this->image = $this->image->clone();
+        $this->image = clone $this->image;
     }
 
     ///////////////////////////////////////
 
-    public function save($filename, $quality = 95)
+    public function save($filename, $quality = 90)
     {
-        $this->image->setImageFormat('jpeg');
-        $this->image->setCompressionQuality($quality);
-        return $this->image->writeImage($filename);
+        $this->image->setImageBackgroundColor('white');
+        $image = $this->image->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+        $image->setImageFormat('jpeg');
+        $image->setCompressionQuality($quality);
+        return $image->writeImage($filename);
     }
 
     public function display($type = 'png')
@@ -81,18 +83,22 @@ class Image
             case 'jpg':
             case 'jpeg':
                 header('Content-type: image/jpeg');
-                $this->image->setImageFormat('jpeg');
-                $this->image->setCompressionQuality(95);
-                echo $this->image;
+                $this->image->setImageBackgroundColor('white');
+                $image = $this->image->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+                $image->setImageFormat('jpeg');
+                $image->setCompressionQuality(90);
+                echo $image;
                 return;
         }
     }
 
     public function __toString()
     {
-        $this->image->setImageFormat('jpeg');
-        $this->image->setCompressionQuality(95);
-        return (string) $this->image;
+        $this->image->setImageBackgroundColor('white');
+        $image = $this->image->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+        $image->setImageFormat('jpeg');
+        $image->setCompressionQuality(90);
+        return (string) $image;
     }
 
     public function resize($width, $height, $keep_ratio = true)
