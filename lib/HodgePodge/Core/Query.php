@@ -6,8 +6,8 @@ use HodgePodge\Common\SqlString;
 
 class Query implements \Psr\Log\LoggerAwareInterface
 {
-    protected $name;    // Name of the connection
-    protected $mysql;     // Connection object
+    protected $name;     // Name of the connection
+    protected $pdo;      // Connection object
     
     protected $sql = array(); // Array of SQL queries to run
     protected $lock = false;
@@ -46,7 +46,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
     // Create a new query container
     public function __construct($connection_name = 'default', $sql = null)
     {
-        if (!$this->mysql = Database::autoconnect($connection_name)) {
+        if (!$this->pdo = Database::autoconnect($connection_name)) {
             throw new Exception\Database('CONNECTION_NOT_DEFINED', "Database connection '$name' does not exist");
         }
         $this->name = $connection_name;
@@ -59,7 +59,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
     // Add arbitary SQL to the query queue
     public function sql($sql)
     {
-        $this->sql[] = trim($sql);
+        $this->sql[] = new SQL(trim($sql));
         return $this;
     }
     
@@ -103,21 +103,17 @@ class Query implements \Psr\Log\LoggerAwareInterface
     
     public function escape($string)
     {
-        return $this->mysql->real_escape_string($string);
+        return $this->pdo->quote($string);
     }
     
     public function transaction()
     {
-        $this->mysql->real_query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-        $result = $this->mysql->store_result();
-        if ($result) $result->close();
-        $this->mysql->autocommit(false);
+        $this->pdo->beginTransaction();
     }
     
     public function commit()
     {
-        $this->mysql->commit();
-        $this->mysql->autocommit(true);
+        $this->pdo->commit();
     }
     
     public function execute()
@@ -130,51 +126,34 @@ class Query implements \Psr\Log\LoggerAwareInterface
         $total_time = microtime(true);
         
         $count = 0;
-        foreach($this->sql as $query) {
-            // Do the database query
-            $this->mysql->real_query($query);
-            $return[$count] = array();
-            
-            // If we have a result set, collated it into an array of rows
-            if ($result = $this->mysql->store_result()) {
-                while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                    $return[$count][] = $row;
-                }            
-                #$return[$count] = $result->fetch_all(MYSQLI_ASSOC);
-                // We don't need that funky result resource anymore...
-                $result->close();
+        $result = [];
+        try {
+            foreach($this->sql as $query) {
+                $result = $query->execute($this->pdo);
+                $return[$count] = $result->fetchAll();
+                
+                // Store some useful data about this set of results
+                $this->debug['insert_id'][$count] = $this->pdo->lastInsertId();
+                $this->debug['affected_rows'][$count] = $result->rowCount();
+                
+                // Check for any errors from the last statement
+                if ($this->mysql->error) {
+                    $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
+                }
+                
+                $count++;
             }
-            
-            // Store some useful data about this set of results
-            $this->debug['insert_id'][$count] = $this->mysql->insert_id;
-            $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
-        
-            // Check for any warning from the last statement
-            if ($this->mysql->warning_count) {
-                $e = $this->mysql->get_warnings();
-                do {
-                    $this->debug['warnings'][$count][] = "{$e->errno}: {$e->message}\n";
-                } while ($e->next());
-            }
-            
-            // Check for any errors from the last statement
-            if ($this->mysql->error) {
-                $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
-            }
-            
-            $count++;
         }
-        
-        // Stop timing query
-        $this->debug['total_time'] = microtime(true) - $total_time;
-        $this->debug['count'] = $count;
-
-        // Log the query with Psr3 Logger
-        $this->logQuery($this);
-
-        // If we had an error, throw and exception.
-        if ($this->debug['error']) {
-            throw new Exception\Query($this);
+        catch (\PDOException $e) {
+            throw new Exception\Query($this, $e);
+        }
+        finally {
+            // Stop timing query
+            $this->debug['total_time'] = microtime(true) - $total_time;
+            $this->debug['count'] = $count;
+            
+            // Log the query with Psr3 Logger
+            $this->logQuery($this);
         }
         
         // Finally, return the results of the query
