@@ -2,8 +2,9 @@
 
 namespace HodgePodge\Cli;
 
-class Color {
-    protected static $ANSI_CODES = array(
+class Color
+{
+    protected static $ANSI_CODES = [
         "off"        => 0,
         "bold"       => 1,
         "italic"     => 3,
@@ -27,26 +28,27 @@ class Color {
         "bg-magenta" => 45,
         "bg-cyan"    => 46,
         "bg-white"   => 47
-    );
+    ];
     
     public static function colorise($colorstring, $string)
     {
         $colors = explode('+', $colorstring);
         $code = '';
-        foreach ($colors as $color)
-        {
+        
+        // Set the seperate parts that make up the desire color
+        foreach ($colors as $color) {
             $code .= "\033[" . self::$ANSI_CODES[$color] . "m";    
         }
         $reset = "\033[" . self::$ANSI_CODES['off'] . "m";
         
         // For any set of ansicodes already in the string that don't start with a reset, prepend a reset 
-        $string = preg_replace('/((?:\033\[[1-9]\d*?m)(?:\033\[\d+?m)*)/', $reset . '$1', $string);
+        $string = preg_replace('/((?:\033\[[1-9]\d*m)(?:\033\[\d+m)*)/', $reset . '$1', $string);
         
         // For any reset that is not followed by other codes, append the current code to the reset
         $string = preg_replace('/(?:\033\[0m(?!\033\[))/', $reset . $code, $string);
         
         // If there are any codes purely sandwiched between two reset, crush the entire set into one reset
-        $string = preg_replace('/(?:\033\[0m)(?:\033\[\d+?m)*(?:\033\[0m)/', $reset, $string);
+        $string = preg_replace('/(?:\033\[0m)(?:\033\[\d+m)*(?:\033\[0m)/', $reset, $string);
         
         // Return colored string
         return $code . $string . $reset;
