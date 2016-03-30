@@ -162,8 +162,10 @@ class Log implements \Psr\Log\LoggerInterface
                 } else {
                     // Collect stats about queries, but don't log to screen yet
                     $query_count++;
-                    $query_time += $log['context']['debug']['total_time'];
-                    $query_errors += $log['context']['error'] ? 1 : 0;
+                    foreach ($log['context'] as $debug) {
+                        $query_time += $debug['time'];
+                        $query_errors += isset($debug['error']) ? 1 : 0;
+                    }
                 }
             }
             $query_time = number_format($query_time, 4);
@@ -178,9 +180,9 @@ class Log implements \Psr\Log\LoggerInterface
                         $message = "console.groupCollapsed('{$log['message']}');\n";
                         if ($log['context']['error']) $message .=  "console.error('".Log::format($log['context']['error'])."');\n";
                         
-                        foreach($log['context']['query'] as $q) {
-                            $message .= "console.log('".Log::format($q)."');\n";
-                        }
+                        $message .= "console.log('".Log::format($log['context']['query']);
+                        if (!empty($log['context']['data'])) $message .= "\\n".Log::format(print_r($log['context']['data'],1));
+                        $message .= "');\n";
                         $message .=  "console.groupEnd();\n";
                         
                         $array[] = $message;

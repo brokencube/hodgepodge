@@ -6,10 +6,10 @@ use HodgePodge\Common\SqlString;
 
 class Query implements \Psr\Log\LoggerAwareInterface
 {
-    protected $name;    // Name of the connection
-    protected $mysql;     // Connection object
+    protected $name;     // Name of the connection
+    protected $pdo;      // Connection object
     
-    protected $sql = array(); // Array of SQL queries to run
+    protected $sql = []; // Array of SQL queries to run
     protected $lock = false;
     protected $debug;
 
@@ -46,7 +46,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
     // Create a new query container
     public function __construct($connection_name = 'default', $sql = null)
     {
-        if (!$this->mysql = Database::autoconnect($connection_name)) {
+        if (!$this->pdo = Database::autoconnect($connection_name)) {
             throw new Exception\Database('CONNECTION_NOT_DEFINED', "Database connection '$name' does not exist");
         }
         $this->name = $connection_name;
@@ -57,9 +57,14 @@ class Query implements \Psr\Log\LoggerAwareInterface
     }
     
     // Add arbitary SQL to the query queue
-    public function sql($sql)
+    public function sql($sql, $data = [])
     {
-        $this->sql[] = trim($sql);
+        if ($sql instanceof SQL) {
+            $this->sql[] = $sql;
+        } else {
+            $this->sql[] = new SQL(trim($sql), $data);    
+        }
+        
         return $this;
     }
     
@@ -89,35 +94,33 @@ class Query implements \Psr\Log\LoggerAwareInterface
         return $this->sql($this->createQuery($table, null, 'count', $where));
     }
     
+    ////////////////
+    
     public function insertId($position = 0)
     {
-        return $this->debug['insert_id'][$position];
+        return $this->debug[$position]['insert_id'];
     }
     
     public function affectedRows($position = 0)
     {
-        return $this->debug['affected_rows'][$position];
+        return $this->debug[$position]['affected_rows'];
     }
     
     /////////////////
     
     public function escape($string)
     {
-        return $this->mysql->real_escape_string($string);
+        return $this->pdo->quote($string);
     }
     
     public function transaction()
     {
-        $this->mysql->real_query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-        $result = $this->mysql->store_result();
-        if ($result) $result->close();
-        $this->mysql->autocommit(false);
+        $this->pdo->beginTransaction();
     }
     
     public function commit()
     {
-        $this->mysql->commit();
-        $this->mysql->autocommit(true);
+        $this->pdo->commit();
     }
     
     public function execute()
@@ -126,55 +129,36 @@ class Query implements \Psr\Log\LoggerAwareInterface
         if ($this->lock) throw new Exception\Database('QUERY_LOCKED', "This query has already been executed", $this);
         $this->lock = true;
         
-        // Start timing query
-        $total_time = microtime(true);
-        
         $count = 0;
-        foreach($this->sql as $query) {
-            // Do the database query
-            $this->mysql->real_query($query);
-            $return[$count] = array();
-            
-            // If we have a result set, collated it into an array of rows
-            if ($result = $this->mysql->store_result()) {
-                while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                    $return[$count][] = $row;
-                }            
-                #$return[$count] = $result->fetch_all(MYSQLI_ASSOC);
-                // We don't need that funky result resource anymore...
-                $result->close();
-            }
-            
-            // Store some useful data about this set of results
-            $this->debug['insert_id'][$count] = $this->mysql->insert_id;
-            $this->debug['affected_rows'][$count] = $this->mysql->affected_rows;
+        $result = [];
         
-            // Check for any warning from the last statement
-            if ($this->mysql->warning_count) {
-                $e = $this->mysql->get_warnings();
-                do {
-                    $this->debug['warnings'][$count][] = "{$e->errno}: {$e->message}\n";
-                } while ($e->next());
+        try {
+            foreach($this->sql as $query) {
+                $time = microtime(true);
+                $result = $query->execute($this->pdo);
+                if ($result->columnCount()) {
+                    $return[$count] = $result->fetchAll(\PDO::FETCH_ASSOC);    
+                } else {
+                    $return[$count] = [];
+                }
+                
+                // Store some useful data about this set of results
+                $this->debug[$count]['insert_id'] = $this->pdo->lastInsertId();
+                $this->debug[$count]['affected_rows'] = $result->rowCount();
+                $this->debug[$count]['time'] = microtime(true) - $time;
+                $count++;
             }
-            
-            // Check for any errors from the last statement
-            if ($this->mysql->error) {
-                $this->debug['error'] = "{$this->mysql->errno}: {$this->mysql->error}\n";
-            }
-            
-            $count++;
         }
-        
-        // Stop timing query
-        $this->debug['total_time'] = microtime(true) - $total_time;
-        $this->debug['count'] = $count;
-
-        // Log the query with Psr3 Logger
-        $this->logQuery($this);
-
-        // If we had an error, throw and exception.
-        if ($this->debug['error']) {
-            throw new Exception\Query($this);
+        catch (\PDOException $e) {
+            $this->debug[$count]['insert_id'] = $this->pdo->lastInsertId();
+            $this->debug[$count]['affected_rows'] = $result->rowCount();
+            $this->debug[$count]['time'] = microtime(true) - $time;
+            
+            throw new Exception\Query($this, $e);
+        }
+        finally {
+            // Log the query with Psr3 Logger
+            $this->logQuery($this);
         }
         
         // Finally, return the results of the query
@@ -184,6 +168,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
     protected function createQuery($table_alias, $data, $type, $where = array(), QueryOptions $options = null)
     {
         list($table, $alias) = explode(' ', $table_alias);
+        $prepared_data = [];
         
         switch($type) {
             // Queries that need building
@@ -221,7 +206,9 @@ class Query implements \Psr\Log\LoggerAwareInterface
                     $query .= " ON " . (string) $join['where'];
                 } else {
                     foreach ($join['where'] as $column => $value) {
-                        $where_array[] = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
+                        $part = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
+                        $where_array[] = $part[0];
+                        $prepared_data = array_merge($prepared_data, array_slice($part, 1));
                     }
                     $query .= " ON " . implode("\n AND ", $where_array);
                 }
@@ -233,7 +220,9 @@ class Query implements \Psr\Log\LoggerAwareInterface
             $data_array = [];
             if (!$data) throw new Exception\Database('NO_COLUMN_DATA', 'No column data given to create_query', $this);
             foreach ($data as $column => $value) {
-                $data_array[] = $this->createQueryPart($alias ?: $table, $column, $value);
+                $part = $this->createQueryPart($alias ?: $table, $column, $value);
+                $data_array[] = $part[0];
+                $prepared_data = array_merge($prepared_data, array_slice($part, 1));
             }
             $query .= " SET " . implode(",\n", $data_array);
         }
@@ -245,7 +234,9 @@ class Query implements \Psr\Log\LoggerAwareInterface
                 $query .= " WHERE " . (string) $where;
             } else {
                 foreach ($where as $column => $value) {
-                    $where_array[] = $this->createQueryPart($alias ?: $table, $column, $value, true);
+                    $part = $this->createQueryPart($alias ?: $table, $column, $value, true);
+                    $where_array[] = $part[0];
+                    $prepared_data = array_merge($prepared_data, array_slice($part, 1));
                 }
                 $query .= " WHERE " . implode("\n AND ", $where_array);
             }
@@ -257,7 +248,9 @@ class Query implements \Psr\Log\LoggerAwareInterface
             // Doing a nasty MySQL trick here to keep last_insert_id consistant: see http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html
             $data[$id_column] = new SqlString("LAST_INSERT_ID($id_column)");
             foreach ($data as $column => $value) {
-                $update_array[] = $this->createQueryPart($alias ?: $table, $column, $value);
+                $part = $this->createQueryPart($alias ?: $table, $column, $value);
+                $update_array[] = $part[0];
+                $prepared_data = array_merge($prepared_data, array_slice($part, 1));
             }
             $query .= " ON DUPLICATE KEY UPDATE " . implode(",\n", $update_array);
         }
@@ -271,7 +264,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
         }
         
         $query .= ";";
-        return $query;
+        return new SQL($query, $prepared_data);
     }
     
     protected function createQueryPart($table, $column, $value, $where = false)
@@ -295,8 +288,8 @@ class Query implements \Psr\Log\LoggerAwareInterface
             }
             
             // Special cases for null values in where clause
-            if ($prefix == '!' and is_null($value)) return "$column is not null";
-            if (is_null($value)) return "$column is null";
+            if ($prefix == '!' and is_null($value)) return ["$column is not null"];
+            if (is_null($value)) return ["$column is null"];
             
             switch ($prefix) {
                 case '=': $comparitor = '='; break;
@@ -316,73 +309,48 @@ class Query implements \Psr\Log\LoggerAwareInterface
         $col = "$column $comparitor ";
         switch (true) {
             case $value instanceof SqlString:
-                return $col . (string) $value;
-            
-            case is_int($value) || is_bool($value):
-                return $col . intval($value);
-            
-            case is_float($value):
-                return $col . $value;
-            
-            case is_null($value):
-                return $col . 'null';
+                return [$col . (string) $value];
             
             case is_array($value):
+                $count = count($value);
+                $in_clause = '(' . implode(',', array_fill(0, $count, '?')) . ')';
+                $mapped_strings = array_map(function ($a) { return (string) $a; }, $value);
                 if ($prefix == '!')
                 {
-                    if (empty($value)) return 'true';
-                    foreach($value as $var) {
-                        switch(true) {
-                            case is_int($var) || is_float($var):
-                                $in[] = (string) $var;
-                                break;
-                            
-                            case is_string($var):
-                                $in[] = "'".  Database::escape($var, $this->name). "'";
-                                break;
-                        }
-                    }
-                    return "$column not in (" . implode(", ", $in) . ")";
+                    return array_merge(["$column not in $in_clause"], $mapped_strings);
                 }
-                else
+                else  
                 {
-                    if (empty($value)) return 'false';
-                    foreach($value as $var) {
-                        switch(true) {
-                            case is_int($var) || is_float($var):
-                                $in[] = (string) $var;
-                                break;
-                            
-                            case is_string($var):
-                                $in[] = "'".  Database::escape($var, $this->name). "'";
-                                break;
-                        }
-                    }
-                    return "$column in (" . implode(", ", $in) . ")";
+                    return array_merge(["$column in $in_clause"], $mapped_strings);
                 }
             
+            case is_object($value):
+                return [$col . '?', (string) $value];
+            
             default:
-                return $col . "'" . Database::escape((string) $value, $this->name) . "'";
+                return [$col . '?', $value];
         }
-        return $part;
     }
 
     public function logQuery(Query $query)
     {
         if ($this->disabled) return;
         
-        $time = number_format($query->debug['total_time'] * 1000, 2);
-        $queries = $query->debug['count'] == 1 ? '1 QUERY' : $query->debug['count'] . " QUERIES";
-        $preview = Log::format(substr(implode(' ', $query->sql),0,100),true);
-        $message = "{$time}ms Con:{$query->name} | {$queries}: $preview";
-        
-        $this->logger->notice(
-            $message,
-            [
-                'query' => $query->sql,
-                'error' => $query->error,
-                'debug' => $query->debug
-            ]
-        );
+        $count = 0;
+        foreach($query->sql as $sql)
+        {
+            $preview = Log::format(substr($sql->sql,0,100),true);
+            $time = number_format($query->debug[0]['time'] * 1000, 2);
+            
+            $message = "{$time}ms Con:{$query->name} | $preview";
+            $this->logger->notice(
+                $message,
+                [
+                    'query' => $sql->sql,
+                    'data' => $sql->data,
+                    'debug' => $query->debug[$count]
+                ]
+            );
+        }
     }
 }
