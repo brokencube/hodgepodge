@@ -39,9 +39,7 @@ class Database implements \SessionHandlerInterface
             try {
                 $query = new Query($this->dbconnection);
                 $query->transaction();
-                $query->sql("
-                    SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = '".$query->escape($id)."' FOR UPDATE
-                ");
+                $query->sql("SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = ? FOR UPDATE", $id);
                 list(list($row)) = $query->execute();
             }
             catch (Exception\Query $e)
@@ -66,10 +64,10 @@ class Database implements \SessionHandlerInterface
                 $query = new Query($this->dbconnection);
                 $query->sql("
                     REPLACE INTO `".static::$tablename."` SET
-                        id = '".$query->escape($id)."',
-                        sessiondata = '".$query->escape($data)."',
-                        expiry = '".(time() + $this->expiry)."'
-                ");
+                        id = ?,
+                        sessiondata = ?,
+                        expiry = ?
+                ", [$id, $data, time() + $this->expiry]);
                 $query->execute();
                 $query->commit();
             }
@@ -88,8 +86,8 @@ class Database implements \SessionHandlerInterface
             try {
                 $query = new Query($this->dbconnection);
                 $query->sql("
-                    Delete from `".static::$tablename."` where id = '".$query->escape($id)."'
-                ");
+                    Delete from `".static::$tablename."` where id = ?
+                ", $id);
                 $query->execute();
                 $query->commit();
             }

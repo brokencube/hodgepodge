@@ -24,7 +24,13 @@ class Database
         return self::$details[$name];
     }
     
-    public $name;
+    public function __get($var)
+    {
+        if (property_exists($this, $var)) return $this->{$var};
+        return null;
+    }
+    
+    protected $name;
     protected $type;
     protected $user;
     protected $pass;
@@ -35,18 +41,18 @@ class Database
     protected function __construct($details, $name = 'default')
     {
         $this->name = $name;
-        $this->server = $detail['server'] ?: 'localhost';
-        $this->user = $detail['user'] ?: 'root';
-        $this->pass = $detail['pass'] ?: '';
-        $this->database = $detail['database'] ?: 'test';
-        $this->type = $detail['type'] ?: 'mysql';
+        $this->server = $details['server'] ?: 'localhost';
+        $this->user = $details['user'] ?: 'root';
+        $this->pass = $details['pass'] ?: '';
+        $this->database = $details['database'] ?: 'test';
+        $this->type = $details['type'] ?: 'mysql';
     }
     
     public function connect()
     {
         unset($this->connection);
         
-        $dsn = $this->type . ':host=' . $this->server . ';dbname=' . $this->database;
+        $dsn = $this->type . ':host=' . $this->server . ';dbname=' . $this->database.';charset=utf8';
         try {
             $this->connection = new \PDO($dsn, $this->user, $this->pass, [
                 \PDO::ATTR_PERSISTENT => true,
@@ -54,7 +60,7 @@ class Database
             ]);
         } catch (\PDOException $e) {
             unset ($this->connection);
-            throw new Exception\Database('CONNECTION_FAILED', 'Database connection failed', null, $e);
+            throw new Exception\Database('CONNECTION_FAILED', "Database connection failed ({$dsn})", null, $e);
         }
         
         return $this->connection;
