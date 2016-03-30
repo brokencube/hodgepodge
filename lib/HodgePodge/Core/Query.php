@@ -130,7 +130,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
         $this->lock = true;
         
         $count = 0;
-        $result = [];
+        $return = [];
         
         try {
             foreach($this->sql as $query) {
@@ -150,8 +150,6 @@ class Query implements \Psr\Log\LoggerAwareInterface
             }
         }
         catch (\PDOException $e) {
-            $this->debug[$count]['insert_id'] = $this->pdo->lastInsertId();
-            $this->debug[$count]['affected_rows'] = $result->rowCount();
             $this->debug[$count]['time'] = microtime(true) - $time;
             
             throw new Exception\Query($this, $e);
