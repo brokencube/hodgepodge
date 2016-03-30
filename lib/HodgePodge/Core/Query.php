@@ -204,11 +204,14 @@ class Query implements \Psr\Log\LoggerAwareInterface
                     $query .= " ON " . (string) $join['where'];
                 } else {
                     foreach ($join['where'] as $column => $value) {
-                        $part = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true);
-                        $where_array[] = $part[0];
-                        $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                        if ($part = $this->createQueryPart($j_alias ?: $j_table, $column, $value, true)) {
+                            $where_array[] = $part[0];
+                            $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                        }
                     }
-                    $query .= " ON " . implode("\n AND ", $where_array);
+                    if ($where_array) {
+                        $query .= " ON " . implode("\n AND ", $where_array);
+                    }
                 }
             }
         }
@@ -218,11 +221,14 @@ class Query implements \Psr\Log\LoggerAwareInterface
             $data_array = [];
             if (!$data) throw new Exception\Database('NO_COLUMN_DATA', 'No column data given to create_query', $this);
             foreach ($data as $column => $value) {
-                $part = $this->createQueryPart($alias ?: $table, $column, $value);
-                $data_array[] = $part[0];
-                $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                if ($part = $this->createQueryPart($alias ?: $table, $column, $value)) {
+                    $data_array[] = $part[0];
+                    $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                }
             }
-            $query .= " SET " . implode(",\n", $data_array);
+            if ($data_array) {
+                $query .= " SET " . implode(",\n", $data_array);
+            }
         }
         
         // Where clause
@@ -232,11 +238,14 @@ class Query implements \Psr\Log\LoggerAwareInterface
                 $query .= " WHERE " . (string) $where;
             } else {
                 foreach ($where as $column => $value) {
-                    $part = $this->createQueryPart($alias ?: $table, $column, $value, true);
-                    $where_array[] = $part[0];
-                    $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                    if ($part = $this->createQueryPart($alias ?: $table, $column, $value, true)) {
+                        $where_array[] = $part[0];
+                        $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                    }
                 }
-                $query .= " WHERE " . implode("\n AND ", $where_array);
+                if ($where_array) {
+                    $query .= " WHERE " . implode("\n AND ", $where_array);
+                }
             }
         }
         
@@ -246,9 +255,10 @@ class Query implements \Psr\Log\LoggerAwareInterface
             // Doing a nasty MySQL trick here to keep last_insert_id consistant: see http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html
             $data[$id_column] = new SqlString("LAST_INSERT_ID($id_column)");
             foreach ($data as $column => $value) {
-                $part = $this->createQueryPart($alias ?: $table, $column, $value);
-                $update_array[] = $part[0];
-                $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                if ($part = $this->createQueryPart($alias ?: $table, $column, $value)) {
+                    $update_array[] = $part[0];
+                    $prepared_data = array_merge($prepared_data, array_slice($part, 1));
+                }
             }
             $query .= " ON DUPLICATE KEY UPDATE " . implode(",\n", $update_array);
         }
@@ -311,6 +321,18 @@ class Query implements \Psr\Log\LoggerAwareInterface
             
             case is_array($value):
                 $count = count($value);
+                if ($count == 0) {
+                    if ($where) {
+                        if ($prefix == '!') {
+                            return ["true"];
+                        } else {
+                            return ["false"];
+                        }
+                    } else {
+                        return [];
+                    }
+                }
+                
                 $in_clause = '(' . implode(',', array_fill(0, $count, '?')) . ')';
                 $mapped_strings = array_map(function ($a) { return (string) $a; }, $value);
                 if ($prefix == '!')
