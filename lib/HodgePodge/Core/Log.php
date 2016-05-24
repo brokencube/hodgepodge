@@ -176,8 +176,8 @@ class Log implements \Psr\Log\LoggerInterface
                 
                 foreach($this->log as $log) {
                     if($log['context']['query']) {
-                        if ($log['context']['error']) $log['message'] = '[ERROR] ' . $log['message'];
-                        $message = "console.groupCollapsed('{$log['message']}');\n";
+                        if ($log['context']['error']) $log['message'] = '[ERROR] ' . Log::format($log['message']);
+                        $message = "console.groupCollapsed('".Log::format($log['message'])."');\n";
                         if ($log['context']['error']) $message .=  "console.error('".Log::format($log['context']['error'])."');\n";
                         
                         $message .= "console.log('".Log::format($log['context']['query']);

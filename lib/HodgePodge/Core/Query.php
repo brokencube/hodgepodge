@@ -285,7 +285,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
         $comparitor = '=';
         if ($where)
         {
-            preg_match('/^([!=<>]*)([^!=<>]+)([!=<>]*)$/', $column, $parts);
+            preg_match('/^([!=<>%]*)([^!=<>%]+)([!=<>%]*)$/', $column, $parts);
             $prefix = $parts[1] ?: $parts[3];
             $column = $parts[2];
             
@@ -307,6 +307,9 @@ class Query implements \Psr\Log\LoggerAwareInterface
                 case '<': $comparitor = '<'; break;
                 case '>=': $comparitor = '>='; break;
                 case '<=': $comparitor = '<='; break;
+                case '%': $comparitor = 'like'; break;
+                case '!%': $comparitor = 'not like'; break;
+                case '%!': $comparitor = 'not like'; break;                    
             }
         }
         else
@@ -359,7 +362,7 @@ class Query implements \Psr\Log\LoggerAwareInterface
         $count = 0;
         foreach($query->sql as $sql)
         {
-            $preview = Log::format(substr($sql->sql,0,100),true);
+            $preview = substr($sql->sql,0,100);
             $time = number_format($query->debug[0]['time'] * 1000, 2);
             
             $message = "{$time}ms Con:{$query->name} | $preview";
