@@ -12,10 +12,11 @@
         }    
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=5.5.0",
         "psr/log": ">=1.0.0"
     },
     "suggest": {
+        "brokencube/automatorm": "~3.0 required for Session functionaltiy",
         "smarty/smarty": "Default template engine for HodgePodge/Core/Scribe"
     },
     "autoload": {    
