@@ -1,7 +1,7 @@
 <?php
 namespace HodgePodge\Session;
 
-use HodgePodge\Core\Query;
+use Automatorm\Database\Query;
 use HodgePodge\Exception;
 
 class Database implements \SessionHandlerInterface
@@ -42,7 +42,7 @@ class Database implements \SessionHandlerInterface
                 $query->sql("SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = ? FOR UPDATE", $id);
                 list(list($row)) = $query->execute();
             }
-            catch (Exception\Query $e)
+            catch (\Automatorm\Exception\Database $e)
             {
                 $this->session_broken = true;
                 throw new Exception\Session('READ', $e);
@@ -71,7 +71,7 @@ class Database implements \SessionHandlerInterface
                 $query->execute();
                 $query->commit();
             }
-            catch (\HodgePodge\Exception\Query $e)
+            catch (\Automatorm\Exception\Database $e)
             {
                 $this->session_broken = true;
                 throw new Exception\Session('WRITE', $e);
@@ -91,7 +91,7 @@ class Database implements \SessionHandlerInterface
                 $query->execute();
                 $query->commit();
             }
-            catch (\HodgePodge\Exception\Query $e)
+            catch (\Automatorm\Exception\Database $e)
             {
                 $this->session_broken = true;
                 throw new Exception\Session('DESTROY', $e);
@@ -110,7 +110,7 @@ class Database implements \SessionHandlerInterface
                 ");
                 $query->execute();
             }
-            catch (\HodgePodge\Exception\Query $e)
+            catch (\Automatorm\Exception\Database $e)
             {
                 $this->session_broken = true;
                 throw new Exception\Session('GC', $e);

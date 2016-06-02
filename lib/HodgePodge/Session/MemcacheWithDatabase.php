@@ -1,7 +1,8 @@
 <?php
 namespace HodgePodge\Session;
 
-use HodgePodge\Core\Query;
+use Automatorm\Database\Query;
+use HodgePodge\Exception;
 
 class MemcacheWithDatabase implements \SessionHandlerInterface
 {
