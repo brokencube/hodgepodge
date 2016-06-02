@@ -3,10 +3,11 @@ New home of my personal microframework
 Current dependancies:
 * PHP 5.5+
 
-Dependancies for specific functionality
+Soft dependancies for specific functionality
 * Memcached or PEAR Cache_Lite (For caching)
-* brokencube/Automatorm (For database session functionality)
 * Imagick extension (For image processing class)
+* brokencube/Automatorm (For database session functionality)
+* Smarty (For default templating code)
 
 Various things still missing from the library - it gets updated as I need new features, or find bugs that are actively affecting me.
 
