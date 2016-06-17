@@ -80,7 +80,7 @@ class Database implements \SessionHandlerInterface
     
     public function write($id, $data)
     {
-        if (!$this->session_broken && $this->write)
+        if (!$this->session_broken)
         {
             try {
                 $query = new Query($this->dbconnection);
@@ -91,7 +91,12 @@ class Database implements \SessionHandlerInterface
                         expiry = ?
                 ", [$id, $data, time() + $this->expiry]);
                 $query->execute();
-                $query->commit();
+                
+                if ($this->write) {
+                    $query->commit();
+                    $this->write = false;
+                    $this->lock = false;
+                }
             }
             catch (\Automatorm\Exception\Database $e)
             {
