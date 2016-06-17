@@ -23,7 +23,6 @@ class Session
     protected $connection;
     protected $handler;
     protected $ready = false;
-    protected $writelock = false;
     protected function __construct($connectionname)
     {
         $this->timeout = $sessiontimeout;
@@ -44,11 +43,8 @@ class Session
         setcookie(session_name(), session_id(), time() + $params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
     
-    protected function lock()
+    public function lock()
     {
-        if ($this->writelock) return;
-        $this->writelock = true;
-        
         $this->handler->writeLock(session_id());    
     }
     
