@@ -45,6 +45,7 @@ class Session
     
     public function lock()
     {
+        $this->init();
         $this->handler->writeLock(session_id());    
     }
     
@@ -62,7 +63,6 @@ class Session
     
     protected function __set($var, $value)
     {
-        $this->init();
         $this->lock();
         return $_SESSION[$var] = $value;
     }   
