@@ -49,7 +49,7 @@ class Session
         $this->handler->writeLock(session_id());    
     }
     
-    protected function __get($var)
+    protected function &__get($var)
     {
         $this->init();
         return $_SESSION[$var];
@@ -61,7 +61,7 @@ class Session
         return array_key_exists($var, $_SESSION);
     }
     
-    protected function __set($var, $value)
+    protected function &__set($var, $value)
     {
         $this->lock();
         return $_SESSION[$var] = $value;
