@@ -13,6 +13,8 @@ class Database implements \SessionHandlerInterface
     protected $expiry;
     protected $initialRead;
     protected $session_broken = false;
+    protected $write = false;
+    protected $lock = false;
 
     public function __construct($expiry = 2592000) // 60*60*24*30
     {
@@ -38,8 +40,19 @@ class Database implements \SessionHandlerInterface
         {
             try {
                 $query = new Query($this->dbconnection);
-                $query->transaction();
-                $query->sql("SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = ? FOR UPDATE", $id);
+                
+                if ($this->write) {
+                    // We know we are writing, so get a "FOR UPDATE" lock
+                    if (!$this->lock) {
+                        // First time we do this, start a transaction!
+                        $query->transaction();
+                        $this->lock = true;
+                    }
+                    $query->sql("SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = ? FOR UPDATE", $id);
+                } else {
+                    // No Lock for Read only!
+                    $query->sql("SELECT sessiondata, expiry FROM `".static::$tablename."` WHERE id = ?", $id);    
+                }
                 list(list($row)) = $query->execute();
             }
             catch (\Automatorm\Exception\Database $e)
@@ -56,9 +69,18 @@ class Database implements \SessionHandlerInterface
         }
     }
     
+    public function writeLock($id)
+    {
+        if (!$this->write) {
+            $this->write = true;
+            // Read again to get "FOR UPDATE" lock on table row
+            return $this->read($id);
+        }
+    }
+    
     public function write($id, $data)
     {
-        if (!$this->session_broken)
+        if (!$this->session_broken && $this->write)
         {
             try {
                 $query = new Query($this->dbconnection);
