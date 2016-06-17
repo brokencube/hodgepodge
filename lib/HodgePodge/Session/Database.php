@@ -111,7 +111,12 @@ class Database implements \SessionHandlerInterface
                     Delete from `".static::$tablename."` where id = ?
                 ", $id);
                 $query->execute();
-                $query->commit();
+                
+                if ($this->write) {
+                    $query->commit();
+                    $this->write = false;
+                    $this->lock = false;
+                }
             }
             catch (\Automatorm\Exception\Database $e)
             {
