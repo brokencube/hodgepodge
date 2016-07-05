@@ -163,7 +163,7 @@ class Log implements \Psr\Log\LoggerInterface
                     // Collect stats about queries, but don't log to screen yet
                     $query_count++;
                     foreach ($log['context'] as $debug) {
-                        $query_time += $debug['time'];
+                        if (array_key_exists('time', $debug)) $query_time += $debug['time'];
                         $query_errors += isset($debug['error']) ? 1 : 0;
                     }
                 }
