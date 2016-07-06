@@ -55,13 +55,13 @@ class Session
         return $_SESSION[$var];
     }
 
-    protected function __isset($var)
+    public function __isset($var)
     {
         $this->init();
         return array_key_exists($var, $_SESSION);
     }
     
-    protected function &__set($var, $value)
+    public function &__set($var, $value)
     {
         $this->lock();
         return $_SESSION[$var] = $value;
