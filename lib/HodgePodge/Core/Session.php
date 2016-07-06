@@ -49,7 +49,7 @@ class Session
         $this->handler->writeLock(session_id());    
     }
     
-    protected function &__get($var)
+    public function &__get($var)
     {
         $this->init();
         return $_SESSION[$var];
