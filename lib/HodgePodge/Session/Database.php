@@ -66,8 +66,10 @@ class Database implements \SessionHandlerInterface
             // If not expired, get sessiondata
             if ($row['expiry'] > time()) {
                 $data = $row['sessiondata'];
+            } else {
+                $data = '';
             }
-            return $data;
+            return (string) $data;
         }
     }
     

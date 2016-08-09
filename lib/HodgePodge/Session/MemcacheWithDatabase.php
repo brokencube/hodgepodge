@@ -57,13 +57,15 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
             // If not expired, get sessiondata
             if ($row['expiry'] > time()) {
                 $data = $row['sessiondata'];
+            } else {
+                $data = '';
             }
         }
         
         // First time we call this, remember what the initial content was
         // We will use this later to decide whether to skip updating the database.
         if (is_null($this->initialRead)) $this->initialRead = $data;
-        return $data;
+        return (string) $data;
     }
     
     public function write($id, $data)
