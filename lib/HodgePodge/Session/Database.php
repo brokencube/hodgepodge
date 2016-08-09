@@ -25,6 +25,7 @@ class Database implements \SessionHandlerInterface
     {
         // Store name of db connection to use (if needed)
         $this->dbconnection = $dbconnection;
+        return true;
     }
     
     public function close()
@@ -32,6 +33,7 @@ class Database implements \SessionHandlerInterface
         // Blank memcached variable to GC Memcached client
         $this->memcached = null;
         $this->dbconnection = null;
+        return true;
     }
     
     public function read($id)
@@ -97,6 +99,8 @@ class Database implements \SessionHandlerInterface
                     $this->write = false;
                     $this->lock = false;
                 }
+                
+                return true;
             }
             catch (\Automatorm\Exception\Database $e)
             {
@@ -104,6 +108,7 @@ class Database implements \SessionHandlerInterface
                 throw new Exception\Session('WRITE', $e);
             }
         }
+        return false;
     }
     
     public function destroy($id)
@@ -122,6 +127,8 @@ class Database implements \SessionHandlerInterface
                     $this->write = false;
                     $this->lock = false;
                 }
+                
+                return true;
             }
             catch (\Automatorm\Exception\Database $e)
             {
@@ -129,6 +136,7 @@ class Database implements \SessionHandlerInterface
                 throw new Exception\Session('DESTROY', $e);
             }
         }
+        return false;
     }
     
     public function gc($maxlifetime)
@@ -141,6 +149,7 @@ class Database implements \SessionHandlerInterface
                     Delete from `".static::$tablename."` where expiry < '".time()."'
                 ");
                 $query->execute();
+                return true;
             }
             catch (\Automatorm\Exception\Database $e)
             {
@@ -148,5 +157,7 @@ class Database implements \SessionHandlerInterface
                 throw new Exception\Session('GC', $e);
             }
         }
+        
+        return false;
     }
 }

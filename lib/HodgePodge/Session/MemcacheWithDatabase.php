@@ -29,6 +29,7 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
         
         // Store name of db connection to use (if needed)
         $this->dbconnection = $dbconnection;
+        return true;
     }
     
     public function close()
@@ -36,6 +37,7 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
         // Blank memcached variable to GC Memcached client
         $this->memcached = null;
         $this->dbconnection = null;
+        return true;
     }
     
     public function read($id)
@@ -94,6 +96,7 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
             Delete from `".static::$tablename."` where id = '".$query->escape($id)."'
         ");
         $query->execute();
+        return true;
     }
     
     public function gc($maxlifetime)
@@ -104,5 +107,6 @@ class MemcacheWithDatabase implements \SessionHandlerInterface
             Delete from `".static::$tablename."` where expiry < '".time()."'
         ");
         $query->execute();
+        return true;
     }
 }
