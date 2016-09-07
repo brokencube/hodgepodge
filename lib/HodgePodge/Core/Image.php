@@ -146,6 +146,8 @@ class Image
     public function crop($x, $y, $height, $width)
     {
         $this->image->cropImage($width, $height, $x, $y);
+        $this->image->setImagePage($width, $height, 0, 0);
+        
         return $this;
     }
 
