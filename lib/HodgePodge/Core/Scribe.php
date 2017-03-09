@@ -54,6 +54,12 @@ class Scribe
     {
         $this->display[$var] = array_merge((array) $this->display[$var], $array);
     }
+
+    // Add (deduplicated) data to the Scribe::$display variable
+    public function prepend($var, array $array)
+    {
+        $this->display[$var] = array_merge($array, (array) $this->display[$var]);
+    }
     
     // Some common helper functions
     public function js(array $array)
